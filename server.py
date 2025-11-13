@@ -160,6 +160,15 @@ async def router(websocket, path):
     if path == "/twilio":
         print("Starting Twilio handler")
         await twilio_handler(websocket)
+    elif path == "/health" or path == "/":
+        # Health check endpoint - respond with HTTP 200
+        try:
+            # Try to send a simple HTTP response
+            await websocket.send("HTTP/1.1 200 OK\r\n\r\nOK")
+            await websocket.close()
+        except:
+            # If it's already a WebSocket connection, just close it
+            await websocket.close()
 
 def main():
     # use this if using ssl
@@ -182,10 +191,11 @@ def main():
     
     async def start_server():
         """Start the websocket server"""
-        server = await websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE)
-        print(f"Server is running and listening on port {port}")
+        # Start WebSocket server (websockets library handles HTTP upgrade requests)
+        ws_server = await websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE)
+        print(f"WebSocket server is running and listening on port {port}")
         print("Server started successfully")
-        return server
+        return ws_server
     
     try:
         # Start the server
