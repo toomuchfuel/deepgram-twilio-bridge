@@ -170,18 +170,28 @@ def main():
     port = int(os.environ.get("PORT", "8080"))
     print(f"Server starting on ws://0.0.0.0:{port}")
     
-    async def run_server():
-        async with websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE):
-            print(f"Server is running and listening on port {port}")
-            # Keep the server running forever
-            await asyncio.Future()  # This will run forever
+    # Use the pattern that works reliably - create server and run forever
+    server = websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE)
+    print(f"Server is running and listening on port {port}")
+    
+    # Create a new event loop (required for some environments)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     
     try:
-        asyncio.run(run_server())
+        # Start the server
+        loop.run_until_complete(server)
+        print("Server started successfully, entering run_forever()")
+        # Keep running forever
+        loop.run_forever()
     except KeyboardInterrupt:
         print("Server shutting down...")
+        loop.close()
     except Exception as e:
         print(f"Server error: {e}")
+        import traceback
+        traceback.print_exc()
+        loop.close()
         raise
 
 
