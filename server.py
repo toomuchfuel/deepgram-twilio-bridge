@@ -5,7 +5,7 @@ import sys
 import websockets
 import ssl
 import os
-
+MAX_WS_MESSAGE_SIZE = None
 
 def sts_connect():
     # you can run export DEEPGRAM_API_KEY="your key" in your terminal to set your API key.
@@ -167,11 +167,23 @@ def main():
     # server = websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context)
 
     # use this if not using ssl
-    server = websockets.serve(router, "localhost", 5000)
-    print("Server starting on ws://localhost:5000")
+    port = int(os.environ.get("PORT", "8080"))
+    print(f"Server starting on ws://0.0.0.0:{port}")
+    
+    async def run_server():
+        async with websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE):
+            print(f"Server is running and listening on port {port}")
+            # Keep the server running forever
+            await asyncio.Future()  # This will run forever
+    
+    try:
+        asyncio.run(run_server())
+    except KeyboardInterrupt:
+        print("Server shutting down...")
+    except Exception as e:
+        print(f"Server error: {e}")
+        raise
 
-    asyncio.get_event_loop().run_until_complete(server)
-    asyncio.get_event_loop().run_forever()
 
 
 if __name__ == "__main__":
