@@ -5,7 +5,7 @@ import sys
 import websockets
 import ssl
 import os
-
+MAX_WS_MESSAGE_SIZE = None
 
 def sts_connect():
     # you can run export DEEPGRAM_API_KEY="your key" in your terminal to set your API key.
