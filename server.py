@@ -170,18 +170,30 @@ def main():
     port = int(os.environ.get("PORT", "8080"))
     print(f"Server starting on ws://0.0.0.0:{port}")
     
-    # Use the pattern that works reliably - create server and run forever
-    server = websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE)
-    print(f"Server is running and listening on port {port}")
-    
     # Create a new event loop (required for some environments)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
+    async def keep_alive():
+        """Keep the event loop alive forever"""
+        while True:
+            await asyncio.sleep(3600)  # Sleep for 1 hour, then repeat
+    
+    async def start_server():
+        """Start the websocket server"""
+        server = await websockets.serve(router, "0.0.0.0", port, max_size=MAX_WS_MESSAGE_SIZE)
+        print(f"Server is running and listening on port {port}")
+        print("Server started successfully")
+        return server
+    
     try:
         # Start the server
-        loop.run_until_complete(server)
-        print("Server started successfully, entering run_forever()")
+        server = loop.run_until_complete(start_server())
+        
+        # Add a keepalive task to ensure the event loop never exits
+        loop.create_task(keep_alive())
+        print("Keepalive task created, entering run_forever()")
+        
         # Keep running forever
         loop.run_forever()
     except KeyboardInterrupt:
