@@ -5,6 +5,7 @@ import sys
 import websockets
 import ssl
 import os
+import signal
 MAX_WS_MESSAGE_SIZE = None
 
 def sts_connect():
@@ -191,13 +192,24 @@ def main():
         server = loop.run_until_complete(start_server())
         
         # Add a keepalive task to ensure the event loop never exits
-        loop.create_task(keep_alive())
+        keepalive_task = loop.create_task(keep_alive())
         print("Keepalive task created, entering run_forever()")
         
-        # Keep running forever
+        # Set up signal handlers for graceful shutdown (but log when they're received)
+        def handle_signal(signum, frame):
+            print(f"Received signal {signum} - Railway may be shutting down container")
+            # Let the signal propagate normally for graceful shutdown
+        
+        signal.signal(signal.SIGTERM, handle_signal)
+        signal.signal(signal.SIGINT, handle_signal)
+        
+        # Keep running forever - this should never return
+        print("Calling loop.run_forever() - this should block indefinitely")
+        print("If you see 'Stopping Container' after this, Railway is killing the process externally")
         loop.run_forever()
+        print("WARNING: loop.run_forever() returned - this should never happen!")
     except KeyboardInterrupt:
-        print("Server shutting down...")
+        print("Server shutting down due to KeyboardInterrupt...")
         loop.close()
     except Exception as e:
         print(f"Server error: {e}")
@@ -205,6 +217,8 @@ def main():
         traceback.print_exc()
         loop.close()
         raise
+    finally:
+        print("Main function exiting - this should not happen if run_forever() works")
 
 
 
