@@ -167,15 +167,11 @@ def main():
     # server = websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context)
 
     # use this if not using ssl
-    host = "0.0.0.0"
-    port = int(os.getenv("PORT", "8080"))
+    server = websockets.serve(router, "localhost", 5000)
+    print("Server starting on ws://localhost:5000")
 
-    server = websockets.serve(router, host, port)
-    print(f"Server starting on ws://{host}:{port}")
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(server)
-    loop.run_forever()
+    asyncio.get_event_loop().run_until_complete(server)
+    asyncio.get_event_loop().run_forever()
 
 
 if __name__ == "__main__":
