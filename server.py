@@ -168,7 +168,7 @@ def main():
 
     # use this if not using ssl
     host = "0.0.0.0"
-    port = int(os.getenv("PORT", "5000"))
+    port = int(os.getenv("PORT", "8080"))
 
     server = websockets.serve(router, host, port)
     print(f"Server starting on ws://{host}:{port}")
