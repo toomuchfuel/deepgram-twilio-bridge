@@ -164,6 +164,51 @@ async def router(websocket, path):
         print(f"Unknown path: {path}, closing connection")
         await websocket.close()
 
+async def handle_connection(reader, writer):
+    """Handle both HTTP health checks and WebSocket connections"""
+    try:
+        # Peek at the first bytes to determine if it's HTTP or WebSocket upgrade
+        peek_data = await asyncio.wait_for(reader.read(1024), timeout=1.0)
+        
+        request_str = peek_data.decode('utf-8', errors='ignore')
+        
+        # Check if it's a WebSocket upgrade request
+        if 'Upgrade: websocket' in request_str or 'upgrade: websocket' in request_str.lower():
+            # This is a WebSocket upgrade - we need to handle it differently
+            # The websockets library expects to handle this, so we can't intercept it easily
+            # For now, close this and let the WebSocket server handle it
+            writer.close()
+            await writer.wait_closed()
+            return
+        
+        # Check if it's a plain HTTP GET request (health check)
+        if request_str.startswith('GET'):
+            response = "HTTP/1.1 200 OK\r\n"
+            response += "Content-Type: text/plain\r\n"
+            response += "Content-Length: 2\r\n"
+            response += "Connection: close\r\n"
+            response += "\r\n"
+            response += "OK"
+            writer.write(response.encode('utf-8'))
+            await writer.drain()
+            print("Health check request responded with 200 OK")
+            writer.close()
+            await writer.wait_closed()
+        else:
+            # Unknown request type
+            writer.close()
+            await writer.wait_closed()
+    except asyncio.TimeoutError:
+        # Timeout reading - might be a different protocol
+        writer.close()
+        await writer.wait_closed()
+    except Exception as e:
+        print(f"Connection handler error: {e}")
+        try:
+            writer.close()
+        except:
+            pass
+
 def main():
     # use this if using ssl
     # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -185,7 +230,7 @@ def main():
             await asyncio.sleep(3600)  # Sleep for 1 hour, then repeat
     
     async def start_server():
-        """Start the websocket server"""
+        """Start WebSocket server - websockets library handles upgrades"""
         # Start WebSocket server (websockets library handles HTTP upgrade requests automatically)
         # The websockets library will respond with HTTP 101 Switching Protocols for WebSocket upgrades
         ws_server = await websockets.serve(
@@ -200,6 +245,7 @@ def main():
         print(f"WebSocket server is running and listening on port {port}")
         print(f"Server will respond with HTTP 101 for WebSocket upgrade requests")
         print("Server started successfully")
+        print("NOTE: Railway HTTP health checks will fail - WebSocket server only handles WebSocket upgrades")
         return ws_server
     
     try:
