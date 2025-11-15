@@ -360,10 +360,13 @@ def main():
         app.router.add_route('*', '/{path:.*}', catch_all)
         
         # Create aiohttp server
+        print(f"Creating server on 0.0.0.0:{port}...")
         runner = web.AppRunner(app)
         await runner.setup()
+        print("Runner setup complete")
         site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
+        print(f"TCP site started - server is NOW listening on port {port}")
         
         print(f"HTTP/WebSocket server is running on port {port}")
         print(f"HTTP health check available at / and /health")
@@ -371,26 +374,47 @@ def main():
         print("Server started successfully and is ready to accept connections")
         print("All incoming requests will be logged")
         
+        # Verify the server is actually listening
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', port))
+        sock.close()
+        if result == 0:
+            print(f"VERIFIED: Port {port} is open and accepting connections")
+        else:
+            print(f"WARNING: Port {port} connection test failed")
+        
         return runner
     
     try:
-        # Start the server
+        # Start the server IMMEDIATELY - this is critical for Railway
+        print("=" * 50)
+        print("STARTING SERVER - Railway will check health soon")
+        print("=" * 50)
         runner = loop.run_until_complete(start_server())
+        print("=" * 50)
+        print("SERVER IS READY - Waiting for Railway health check...")
+        print("=" * 50)
         
         # Add a keepalive task to ensure the event loop never exits
         keepalive_task = loop.create_task(keep_alive())
-        print("Keepalive task created, entering run_forever()")
+        print("Keepalive task created")
         
-        # Set up signal handlers for graceful shutdown
+        # Set up signal handlers - but DON'T exit immediately on SIGTERM
+        # Railway might send SIGTERM as a test, we should ignore it if we're healthy
         def handle_signal(signum, frame):
-            print(f"Received signal {signum} - shutting down gracefully")
-            loop.create_task(cleanup(runner))
+            print(f"Received signal {signum}")
+            print("If this is Railway's health check, we should ignore it")
+            print("Scheduling cleanup but continuing to run...")
+            # Don't immediately stop - give Railway time to see we're healthy
+            asyncio.run_coroutine_threadsafe(cleanup(runner), loop)
         
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGINT, handle_signal)
         
         # Keep running forever
-        print("Calling loop.run_forever() - server is ready")
+        print("Entering run_forever() - server is listening and ready")
+        print("If Railway sends health checks, you'll see 'INCOMING REQUEST' above")
         loop.run_forever()
         print("WARNING: loop.run_forever() returned - this should never happen!")
     except KeyboardInterrupt:
