@@ -6,6 +6,7 @@ import websockets
 import ssl
 import os
 import signal
+from aiohttp import web
 MAX_WS_MESSAGE_SIZE = None
 
 def sts_connect():
@@ -155,59 +156,152 @@ async def twilio_handler(twilio_ws):
         await twilio_ws.close()
 
 
-async def router(websocket, path):
-    print(f"Incoming WebSocket connection on path: {path}")
-    if path == "/twilio":
+async def websocket_handler(request):
+    """Handle WebSocket connections from Twilio"""
+    ws = web.WebSocketResponse(max_size=MAX_WS_MESSAGE_SIZE)
+    await ws.prepare(request)
+    
+    print(f"Incoming WebSocket connection on path: {request.path}")
+    if request.path == "/twilio":
         print("Starting Twilio handler")
-        await twilio_handler(websocket)
+        # Convert aiohttp WebSocket to websockets-compatible interface
+        # We need to adapt the interface
+        await twilio_handler_aiohttp(ws)
     else:
-        print(f"Unknown path: {path}, closing connection")
-        await websocket.close()
+        print(f"Unknown path: {request.path}, closing connection")
+        await ws.close()
+    
+    return ws
 
-async def handle_connection(reader, writer):
-    """Handle both HTTP health checks and WebSocket connections"""
-    try:
-        # Peek at the first bytes to determine if it's HTTP or WebSocket upgrade
-        peek_data = await asyncio.wait_for(reader.read(1024), timeout=1.0)
-        
-        request_str = peek_data.decode('utf-8', errors='ignore')
-        
-        # Check if it's a WebSocket upgrade request
-        if 'Upgrade: websocket' in request_str or 'upgrade: websocket' in request_str.lower():
-            # This is a WebSocket upgrade - we need to handle it differently
-            # The websockets library expects to handle this, so we can't intercept it easily
-            # For now, close this and let the WebSocket server handle it
-            writer.close()
-            await writer.wait_closed()
-            return
-        
-        # Check if it's a plain HTTP GET request (health check)
-        if request_str.startswith('GET'):
-            response = "HTTP/1.1 200 OK\r\n"
-            response += "Content-Type: text/plain\r\n"
-            response += "Content-Length: 2\r\n"
-            response += "Connection: close\r\n"
-            response += "\r\n"
-            response += "OK"
-            writer.write(response.encode('utf-8'))
-            await writer.drain()
-            print("Health check request responded with 200 OK")
-            writer.close()
-            await writer.wait_closed()
-        else:
-            # Unknown request type
-            writer.close()
-            await writer.wait_closed()
-    except asyncio.TimeoutError:
-        # Timeout reading - might be a different protocol
-        writer.close()
-        await writer.wait_closed()
-    except Exception as e:
-        print(f"Connection handler error: {e}")
-        try:
-            writer.close()
-        except:
-            pass
+async def twilio_handler_aiohttp(twilio_ws):
+    """Adapted Twilio handler for aiohttp WebSocket"""
+    audio_queue = asyncio.Queue()
+    streamsid_queue = asyncio.Queue()
+
+    async with sts_connect() as sts_ws:
+        config_message = {
+            "type": "Settings",
+            "audio": {
+                "input": {
+                    "encoding": "mulaw",
+                    "sample_rate": 8000,
+                },
+                "output": {
+                    "encoding": "mulaw",
+                    "sample_rate": 8000,
+                    "container": "none",
+                },
+            },
+            "agent": {
+                "language": "en",
+                "listen": {
+                    "provider": {
+                        "type": "deepgram",
+                        "model": "nova-3",
+                        "keyterms": ["hello", "goodbye"]
+                    }
+                },
+                "think": {
+                    "provider": {
+                        "type": "open_ai",
+                        "model": "gpt-4o-mini",
+                        "temperature": 0.7
+                    },
+                    "prompt": "You are a helpful AI assistant focused on customer service."
+                },
+                "speak": {
+                    "provider": {
+                        "type": "deepgram",
+                        "model": "aura-2-thalia-en"
+                    }
+                },
+                "greeting": "Hello! How can I help you today?"
+            }
+        }
+
+        await sts_ws.send(json.dumps(config_message))
+
+        async def sts_sender(sts_ws):
+            print("sts_sender started")
+            while True:
+                chunk = await audio_queue.get()
+                await sts_ws.send(chunk)
+
+        async def sts_receiver(sts_ws):
+            print("sts_receiver started")
+            streamsid = await streamsid_queue.get()
+            async for message in sts_ws:
+                if type(message) is str:
+                    print(message)
+                    decoded = json.loads(message)
+                    if decoded['type'] == 'UserStartedSpeaking':
+                        clear_message = {
+                            "event": "clear",
+                            "streamSid": streamsid
+                        }
+                        await twilio_ws.send_str(json.dumps(clear_message))
+                    continue
+
+                print(type(message))
+                raw_mulaw = message
+
+                media_message = {
+                    "event": "media",
+                    "streamSid": streamsid,
+                    "media": {"payload": base64.b64encode(raw_mulaw).decode("ascii")},
+                }
+
+                await twilio_ws.send_str(json.dumps(media_message))
+
+        async def twilio_receiver(twilio_ws):
+            print("twilio_receiver started")
+            BUFFER_SIZE = 20 * 160
+            inbuffer = bytearray(b"")
+            
+            async for msg in twilio_ws:
+                if msg.type == web.WSMsgType.TEXT:
+                    try:
+                        data = json.loads(msg.data)
+                        if data["event"] == "start":
+                            print("got our streamsid")
+                            start = data["start"]
+                            streamsid = start["streamSid"]
+                            streamsid_queue.put_nowait(streamsid)
+                        if data["event"] == "connected":
+                            continue
+                        if data["event"] == "media":
+                            media = data["media"]
+                            chunk = base64.b64decode(media["payload"])
+                            if media["track"] == "inbound":
+                                inbuffer.extend(chunk)
+                        if data["event"] == "stop":
+                            break
+
+                        while len(inbuffer) >= BUFFER_SIZE:
+                            chunk = inbuffer[:BUFFER_SIZE]
+                            audio_queue.put_nowait(chunk)
+                            inbuffer = inbuffer[BUFFER_SIZE:]
+                    except Exception as e:
+                        print(f"Error in twilio_receiver: {e}")
+                        break
+                elif msg.type == web.WSMsgType.ERROR:
+                    print(f"WebSocket error: {twilio_ws.exception()}")
+                    break
+
+        await asyncio.wait(
+            [
+                asyncio.ensure_future(sts_sender(sts_ws)),
+                asyncio.ensure_future(sts_receiver(sts_ws)),
+                asyncio.ensure_future(twilio_receiver(twilio_ws)),
+            ]
+        )
+
+        await twilio_ws.close()
+
+async def health_check(request):
+    """HTTP health check endpoint for Railway"""
+    print("Health check request received")
+    return web.Response(text="OK", status=200)
 
 def main():
     # use this if using ssl
@@ -230,43 +324,47 @@ def main():
             await asyncio.sleep(3600)  # Sleep for 1 hour, then repeat
     
     async def start_server():
-        """Start WebSocket server - websockets library handles upgrades"""
-        # Start WebSocket server (websockets library handles HTTP upgrade requests automatically)
-        # The websockets library will respond with HTTP 101 Switching Protocols for WebSocket upgrades
-        ws_server = await websockets.serve(
-            router, 
-            "0.0.0.0", 
-            port, 
-            max_size=MAX_WS_MESSAGE_SIZE,
-            # Ensure WebSocket upgrade is handled properly
-            ping_interval=20,
-            ping_timeout=10
-        )
-        print(f"WebSocket server is running and listening on port {port}")
-        print(f"Server will respond with HTTP 101 for WebSocket upgrade requests")
+        """Start aiohttp server that handles both HTTP and WebSocket"""
+        app = web.Application()
+        
+        # HTTP health check endpoint
+        app.router.add_get('/', health_check)
+        app.router.add_get('/health', health_check)
+        
+        # WebSocket endpoint for Twilio
+        app.router.add_get('/twilio', websocket_handler)
+        
+        # Create aiohttp server
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
+        
+        print(f"HTTP/WebSocket server is running on port {port}")
+        print(f"HTTP health check available at / and /health")
+        print(f"WebSocket endpoint available at /twilio")
         print("Server started successfully")
-        print("NOTE: Railway HTTP health checks will fail - WebSocket server only handles WebSocket upgrades")
-        return ws_server
+        
+        return runner
     
     try:
         # Start the server
-        server = loop.run_until_complete(start_server())
+        runner = loop.run_until_complete(start_server())
         
         # Add a keepalive task to ensure the event loop never exits
         keepalive_task = loop.create_task(keep_alive())
         print("Keepalive task created, entering run_forever()")
         
-        # Set up signal handlers for graceful shutdown (but log when they're received)
+        # Set up signal handlers for graceful shutdown
         def handle_signal(signum, frame):
-            print(f"Received signal {signum} - Railway may be shutting down container")
-            # Let the signal propagate normally for graceful shutdown
+            print(f"Received signal {signum} - shutting down gracefully")
+            loop.create_task(cleanup(runner))
         
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGINT, handle_signal)
         
-        # Keep running forever - this should never return
-        print("Calling loop.run_forever() - this should block indefinitely")
-        print("If you see 'Stopping Container' after this, Railway is killing the process externally")
+        # Keep running forever
+        print("Calling loop.run_forever() - server is ready")
         loop.run_forever()
         print("WARNING: loop.run_forever() returned - this should never happen!")
     except KeyboardInterrupt:
@@ -278,8 +376,17 @@ def main():
         traceback.print_exc()
         loop.close()
         raise
+
+async def cleanup(runner):
+    """Cleanup function for graceful shutdown"""
+    try:
+        await runner.cleanup()
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
     finally:
-        print("Main function exiting - this should not happen if run_forever() works")
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.stop()
 
 
 
