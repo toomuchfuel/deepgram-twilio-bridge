@@ -317,11 +317,13 @@ def main():
     # use this if not using ssl
     # Railway sets PORT automatically, but default to 5000 to match Railway config
     port = int(os.environ.get("PORT", "5000"))
-    print(f"Server starting on ws://0.0.0.0:{port}")
     
-    # Create a new event loop (required for some environments)
+    # Create event loop FIRST - this is critical
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    
+    print(f"Server starting on ws://0.0.0.0:{port}")
+    print("Event loop created - starting server immediately")
     
     async def keep_alive():
         """Keep the event loop alive forever"""
@@ -393,13 +395,14 @@ def main():
         return runner
     
     try:
-        # Start the server IMMEDIATELY - this is critical for Railway
+        # Start the server IMMEDIATELY - Railway checks health very quickly
         print("=" * 50)
-        print("STARTING SERVER - Railway will check health soon")
+        print("STARTING SERVER NOW - Railway health checks start immediately")
         print("=" * 50)
+        # Start server in the event loop - this must happen FAST
         runner = loop.run_until_complete(start_server())
         print("=" * 50)
-        print("SERVER IS READY - Waiting for Railway health check...")
+        print("SERVER IS READY - Health checks should now pass")
         print("=" * 50)
         
         # Add a keepalive task to ensure the event loop never exits
