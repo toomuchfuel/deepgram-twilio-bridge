@@ -300,8 +300,12 @@ async def twilio_handler_aiohttp(twilio_ws):
 
 async def health_check(request):
     """HTTP health check endpoint for Railway"""
-    print("Health check request received")
-    return web.Response(text="OK", status=200)
+    print(f"Health check request received: {request.method} {request.path}")
+    print(f"Health check headers: {dict(request.headers)}")
+    response = web.Response(text="OK", status=200)
+    response.headers['Content-Type'] = 'text/plain'
+    print("Health check responding with 200 OK")
+    return response
 
 def main():
     # use this if using ssl
@@ -343,7 +347,10 @@ def main():
         print(f"HTTP/WebSocket server is running on port {port}")
         print(f"HTTP health check available at / and /health")
         print(f"WebSocket endpoint available at /twilio")
-        print("Server started successfully")
+        print("Server started successfully and is ready to accept connections")
+        
+        # Give the server a moment to fully start
+        await asyncio.sleep(0.5)
         
         return runner
     
