@@ -332,16 +332,14 @@ def main():
         """Start aiohttp server that handles both HTTP and WebSocket"""
         app = web.Application()
         
-        # Track server readiness
+        # Track server readiness - start as ready since health checks should work immediately
         server_ready = asyncio.Event()
+        server_ready.set()  # Mark as ready immediately - health checks can work during startup
         
         # Middleware to log all requests
         @web.middleware
         async def logging_middleware(request, handler):
             print(f"INCOMING REQUEST: {request.method} {request.path} from {request.remote}")
-            # Ensure server is ready before handling
-            if not server_ready.is_set():
-                print("WARNING: Request received before server is marked ready!")
             try:
                 response = await handler(request)
                 print(f"RESPONSE: {request.method} {request.path} -> {response.status}")
@@ -352,7 +350,7 @@ def main():
         
         app.middlewares.append(logging_middleware)
         
-        # HTTP health check endpoint
+        # HTTP health check endpoint - register FIRST so it's available immediately
         app.router.add_get('/', health_check)
         app.router.add_get('/health', health_check)
         
@@ -370,18 +368,11 @@ def main():
         print(f"Creating server on 0.0.0.0:{port}...")
         runner = web.AppRunner(app)
         await runner.setup()
-        print("Runner setup complete")
+        print("Runner setup complete - health check endpoint is registered")
         site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
         print(f"TCP site started - server is NOW listening on port {port}")
-        
-        # Mark server as ready IMMEDIATELY after starting
-        server_ready.set()
-        print("Server marked as READY - health checks will now work")
-        
-        # Give Railway a moment to see the server is ready
-        # But don't wait too long - we want to be ready ASAP
-        await asyncio.sleep(0.1)  # 100ms should be enough
+        print("Health checks can now be received and will respond immediately")
         
         print(f"HTTP/WebSocket server is running on port {port}")
         print(f"HTTP health check available at / and /health")
