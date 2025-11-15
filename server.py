@@ -338,6 +338,13 @@ def main():
         # WebSocket endpoint for Twilio
         app.router.add_get('/twilio', websocket_handler)
         
+        # Catch-all route to log any other requests
+        async def catch_all(request):
+            print(f"Unhandled request: {request.method} {request.path}")
+            return web.Response(text="Not Found", status=404)
+        
+        app.router.add_route('*', '/{path:.*}', catch_all)
+        
         # Create aiohttp server
         runner = web.AppRunner(app)
         await runner.setup()
