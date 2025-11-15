@@ -299,12 +299,13 @@ async def twilio_handler_aiohttp(twilio_ws):
         await twilio_ws.close()
 
 async def health_check(request):
-    """HTTP health check endpoint for Railway"""
-    print(f"Health check request received: {request.method} {request.path}")
-    print(f"Health check headers: {dict(request.headers)}")
+    """HTTP health check endpoint for Railway - responds immediately"""
+    # Respond as fast as possible - Railway might have tight timeouts
     response = web.Response(text="OK", status=200)
     response.headers['Content-Type'] = 'text/plain'
-    print("Health check responding with 200 OK")
+    response.headers['Cache-Control'] = 'no-cache'
+    # Log after responding to minimize latency
+    print(f"Health check: {request.method} {request.path} -> 200 OK (responded immediately)")
     return response
 
 def main():
@@ -365,7 +366,7 @@ def main():
         
         app.router.add_route('*', '/{path:.*}', catch_all)
         
-        # Create aiohttp server
+        # Create aiohttp server - do this as fast as possible
         print(f"Creating server on 0.0.0.0:{port}...")
         runner = web.AppRunner(app)
         await runner.setup()
@@ -374,9 +375,13 @@ def main():
         await site.start()
         print(f"TCP site started - server is NOW listening on port {port}")
         
-        # Mark server as ready
+        # Mark server as ready IMMEDIATELY after starting
         server_ready.set()
-        print("Server marked as READY")
+        print("Server marked as READY - health checks will now work")
+        
+        # Give Railway a moment to see the server is ready
+        # But don't wait too long - we want to be ready ASAP
+        await asyncio.sleep(0.1)  # 100ms should be enough
         
         print(f"HTTP/WebSocket server is running on port {port}")
         print(f"HTTP health check available at / and /health")
