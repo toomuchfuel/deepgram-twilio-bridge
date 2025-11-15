@@ -331,10 +331,16 @@ def main():
         """Start aiohttp server that handles both HTTP and WebSocket"""
         app = web.Application()
         
+        # Track server readiness
+        server_ready = asyncio.Event()
+        
         # Middleware to log all requests
         @web.middleware
         async def logging_middleware(request, handler):
             print(f"INCOMING REQUEST: {request.method} {request.path} from {request.remote}")
+            # Ensure server is ready before handling
+            if not server_ready.is_set():
+                print("WARNING: Request received before server is marked ready!")
             try:
                 response = await handler(request)
                 print(f"RESPONSE: {request.method} {request.path} -> {response.status}")
@@ -367,6 +373,10 @@ def main():
         site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
         print(f"TCP site started - server is NOW listening on port {port}")
+        
+        # Mark server as ready
+        server_ready.set()
+        print("Server marked as READY")
         
         print(f"HTTP/WebSocket server is running on port {port}")
         print(f"HTTP health check available at / and /health")
