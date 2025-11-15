@@ -171,7 +171,8 @@ def main():
     # server = websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context)
 
     # use this if not using ssl
-    port = int(os.environ.get("PORT", "8080"))
+    # Railway sets PORT automatically, but default to 5000 to match Railway config
+    port = int(os.environ.get("PORT", "5000"))
     print(f"Server starting on ws://0.0.0.0:{port}")
     
     # Create a new event loop (required for some environments)
