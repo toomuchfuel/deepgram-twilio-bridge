@@ -331,6 +331,20 @@ def main():
         """Start aiohttp server that handles both HTTP and WebSocket"""
         app = web.Application()
         
+        # Middleware to log all requests
+        @web.middleware
+        async def logging_middleware(request, handler):
+            print(f"INCOMING REQUEST: {request.method} {request.path} from {request.remote}")
+            try:
+                response = await handler(request)
+                print(f"RESPONSE: {request.method} {request.path} -> {response.status}")
+                return response
+            except Exception as e:
+                print(f"ERROR handling {request.method} {request.path}: {e}")
+                raise
+        
+        app.middlewares.append(logging_middleware)
+        
         # HTTP health check endpoint
         app.router.add_get('/', health_check)
         app.router.add_get('/health', health_check)
@@ -355,9 +369,7 @@ def main():
         print(f"HTTP health check available at / and /health")
         print(f"WebSocket endpoint available at /twilio")
         print("Server started successfully and is ready to accept connections")
-        
-        # Give the server a moment to fully start
-        await asyncio.sleep(0.5)
+        print("All incoming requests will be logged")
         
         return runner
     
