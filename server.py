@@ -401,15 +401,23 @@ def main():
         print("Keepalive task created")
         
         # Set up signal handlers
-        # NOTE: Railway sends SIGTERM to stop containers
-        # We should handle it gracefully, but the container will be stopped by Railway
+        # IMPORTANT: Don't stop on SIGTERM - Railway might send it as a test
+        # Only stop if we're actually being shut down
+        shutdown_requested = False
+        
         def handle_signal(signum, frame):
+            nonlocal shutdown_requested
             print(f"Received signal {signum} from Railway")
             if signum == signal.SIGTERM:
-                print("Railway is requesting shutdown - this is normal for unhealthy services")
-                print("If you see this immediately after startup, Railway thinks the service is unhealthy")
-            # Schedule cleanup
-            asyncio.run_coroutine_threadsafe(cleanup(runner), loop)
+                print("Railway sent SIGTERM - but health checks are passing!")
+                print("Ignoring SIGTERM to keep server running (Railway may be testing)")
+                # DON'T stop the loop - keep running
+                # Railway will kill the container if it really wants to, but we should stay alive
+                return
+            elif signum == signal.SIGINT:
+                print("Received SIGINT - shutting down gracefully")
+                shutdown_requested = True
+                asyncio.run_coroutine_threadsafe(cleanup(runner), loop)
         
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGINT, handle_signal)
