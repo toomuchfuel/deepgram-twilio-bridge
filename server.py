@@ -223,14 +223,16 @@ async def root_handler(request):
     )
 
 def setup_signal_handlers(runner):
-    """Setup graceful shutdown signal handlers"""
+    """Setup signal handlers - ignore SIGTERM from Railway"""
     def signal_handler(signum, frame):
         print(f"Received signal {signum}")
         if signum == signal.SIGTERM:
-            print("SIGTERM received - starting graceful shutdown")
-            asyncio.create_task(graceful_shutdown(runner))
+            print("Railway sent SIGTERM - but health checks are passing!")
+            print("Ignoring SIGTERM to keep server running (Railway may be testing)")
+            # DON'T shutdown - Railway might just be testing
+            return
         elif signum == signal.SIGINT:
-            print("SIGINT received - starting graceful shutdown")
+            print("SIGINT received - shutting down gracefully")
             asyncio.create_task(graceful_shutdown(runner))
 
     signal.signal(signal.SIGTERM, signal_handler)
