@@ -6,6 +6,7 @@ import websockets
 import os
 import signal
 from aiohttp import web
+from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE
 
 # Global variables
 shutdown_event = asyncio.Event()
@@ -72,15 +73,15 @@ async def twilio_handler(twilio_ws):
                     "think": {
                         "provider": {
                             "type": "open_ai",
-                            "model": "gpt-4o-mini",
-                            "temperature": 0.7
+                            "model": LLM_MODEL,
+                            "temperature": LLM_TEMPERATURE
                         },
-                        "prompt": "You are a helpful AI assistant focused on customer service."
+                        "prompt": VOICE_AGENT_PERSONALITY
                     },
                     "speak": {
                         "provider": {
                             "type": "deepgram",
-                            "model": "aura-2-theia-en"
+                            "model": VOICE_MODEL
                         }
                     },
                     "greeting": "Hello! How can I help you today?"
