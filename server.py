@@ -7,9 +7,24 @@ import os
 import signal
 from aiohttp import web
 from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE
+from database import LogosDatabase, format_context_for_va
 
 # Global variables
 shutdown_event = asyncio.Event()
+db = None  # Database instance
+active_sessions = {}  # Store session data: {call_sid: session_data}
+
+async def initialize_database():
+    """Initialize database connection"""
+    global db
+    try:
+        db = LogosDatabase()
+        await db.connect()
+        print("Database connected successfully")
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        # Continue without database for now
+        db = None
 
 def sts_connect():
     """Connect to Deepgram Voice Agent API"""
@@ -44,6 +59,12 @@ async def twilio_handler(twilio_ws):
     """Handle Twilio WebSocket communication with Deepgram"""
     audio_queue = asyncio.Queue()
     streamsid_queue = asyncio.Queue()
+    
+    # Initialize session variables
+    caller_phone = None
+    call_sid = None
+    session_id = None
+    caller_context = None
 
     try:
         async with sts_connect() as sts_ws:
@@ -279,6 +300,9 @@ def main():
         print("DEEPGRAM_API_KEY found in environment")
 
     async def run_server():
+        # Initialize database first
+        await initialize_database()
+        
         # Create the web application
         app = await create_app()
         
