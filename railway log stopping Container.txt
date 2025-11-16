@@ -1,0 +1,29 @@
+Starting Container
+Server starting on ws://0.0.0.0:5000
+Event loop created - starting server immediately
+==================================================
+STARTING SERVER NOW - Railway health checks start immediately
+==================================================
+Creating server on 0.0.0.0:5000...
+Runner setup complete - health check endpoint is registered
+TCP site started - server is NOW listening on port 5000
+Health checks can now be received and will respond immediately
+HTTP/WebSocket server is running on port 5000
+HTTP health check available at / and /health
+WebSocket endpoint available at /twilio
+Server started successfully and is ready to accept connections
+All incoming requests will be logged
+VERIFIED: Port 5000 is open and accepting connections
+==================================================
+SERVER IS READY - Health checks should now pass
+==================================================
+Keepalive task created
+Entering run_forever() - server is listening and ready
+If Railway sends health checks, you'll see 'INCOMING REQUEST' above
+INCOMING REQUEST: GET /health from 100.64.0.2
+Health check: GET /health -> 200 OK (responded immediately)
+RESPONSE: GET /health -> 200
+Stopping Container
+Received signal 15 from Railway
+Railway sent SIGTERM - but health checks are passing!
+Ignoring SIGTERM to keep server running (Railway may be testing)
