@@ -4,6 +4,6 @@
   },
   "deploy": {
     "startCommand": "python server.py",
-    "restartPolicyType": "ON_FAILURE"
+    "restartPolicyType": "ALWAYS"
   }
 }
