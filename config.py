@@ -4,7 +4,7 @@
 VOICE_AGENT_PERSONALITY = """You are having a casual chat with someone who called you. 
 Be naturally curious about what they share. 
 Ask simple follow-up questions like a friend would. 
-Keep it conversational and relaxed."""
+Keep responses very short - 1-2 sentences max."""
 
 # Voice settings
 VOICE_MODEL = "aura-2-theia-en"  # Australian accent
