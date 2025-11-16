@@ -191,6 +191,7 @@ async def twilio_handler(twilio_ws):
                                 
                                 if data["event"] == "start":
                                     print("Received Twilio start event")
+                                    print(f"DEBUG: Full start data: {data}")
                                     start = data["start"]
                                     streamsid = start["streamSid"]
                                     call_sid = start["callSid"]
