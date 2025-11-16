@@ -140,6 +140,17 @@ async def twilio_handler(twilio_ws):
                             print(f"Deepgram message: {message}")
                             try:
                                 decoded = json.loads(message)
+                                
+                                # Store conversation messages in database
+                                if decoded.get('type') == 'ConversationText' and session_id and db:
+                                    role = decoded.get('role')
+                                    content = decoded.get('content')
+                                    if role and content:
+                                        try:
+                                            await db.add_message(session_id, role, content, decoded)
+                                        except Exception as e:
+                                            print(f"Error storing message: {e}")
+                                
                                 if decoded['type'] == 'UserStartedSpeaking':
                                     # Handle barge-in
                                     clear_message = {
@@ -182,6 +193,25 @@ async def twilio_handler(twilio_ws):
                                     print("Received Twilio start event")
                                     start = data["start"]
                                     streamsid = start["streamSid"]
+                                    call_sid = start["callSid"]
+                                    
+                                    # Extract caller phone number (comes in start event)
+                                    caller_phone = start.get("from", "unknown")
+                                    print(f"Call from {caller_phone}, CallSid: {call_sid}")
+                                    
+                                    # Load caller context from database
+                                    if db:
+                                        try:
+                                            caller_data = await db.get_or_create_caller(caller_phone, call_sid)
+                                            session_id = caller_data['session_id']
+                                            caller_context = caller_data['context']
+                                            
+                                            print(f"Loaded caller context - Session {caller_data['session_number']}")
+                                            if caller_data['context']['recent_sessions']:
+                                                print(f"Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                                        except Exception as e:
+                                            print(f"Database error: {e}")
+                                    
                                     streamsid_queue.put_nowait(streamsid)
                                     
                                 elif data["event"] == "connected":
@@ -195,6 +225,17 @@ async def twilio_handler(twilio_ws):
                                         
                                 elif data["event"] == "stop":
                                     print("Twilio stop event")
+                                    
+                                    # End database session
+                                    if session_id and db:
+                                        try:
+                                            # Generate simple summary based on messages
+                                            summary = f"Phone call session - discussed various topics"
+                                            await db.end_session(session_id, summary)
+                                            print(f"Session {session_id} ended and saved")
+                                        except Exception as e:
+                                            print(f"Error ending session: {e}")
+                                    
                                     break
 
                                 # Send buffered audio to Deepgram
