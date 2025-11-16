@@ -13,3 +13,8 @@ VOICE_TEMPERATURE = 0.7
 # LLM settings  
 LLM_MODEL = "gpt-4o-mini"
 LLM_TEMPERATURE = 0.7
+
+# Conversation timing settings (in milliseconds)
+ENDPOINTING_MS = 1500  # Wait 1.5 seconds of silence before responding
+UTTERANCE_END_MS = 2000  # Backup timeout of 2 seconds
+INTERIM_RESULTS = True  # Show partial transcripts

@@ -6,7 +6,7 @@ import websockets
 import os
 import signal
 from aiohttp import web
-from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE
+from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE, ENDPOINTING_MS, UTTERANCE_END_MS, INTERIM_RESULTS
 
 # Global variables
 shutdown_event = asyncio.Event()
@@ -67,7 +67,9 @@ async def twilio_handler(twilio_ws):
                         "provider": {
                             "type": "deepgram",
                             "model": "nova-3",
-                            "keyterms": ["hello", "goodbye"]
+                            "endpointing": ENDPOINTING_MS,
+                            "utterance_end_ms": UTTERANCE_END_MS,
+                            "interim_results": INTERIM_RESULTS
                         }
                     },
                     "think": {
