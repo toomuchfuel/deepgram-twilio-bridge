@@ -8,7 +8,6 @@ import signal
 from aiohttp import web
 
 # Global variables
-MAX_WS_MESSAGE_SIZE = None
 shutdown_event = asyncio.Event()
 
 def sts_connect():
@@ -25,7 +24,7 @@ def sts_connect():
 
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
-    ws = web.WebSocketResponse(max_size=MAX_WS_MESSAGE_SIZE)
+    ws = web.WebSocketResponse()
     await ws.prepare(request)
     
     print(f"WebSocket connection established on path: {request.path}")
