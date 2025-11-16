@@ -222,39 +222,21 @@ async def root_handler(request):
         headers={'Content-Type': 'text/plain'}
     )
 
-def setup_signal_handlers(runner):
+def setup_signal_handlers():
     """Setup signal handlers - ignore SIGTERM from Railway"""
-    def signal_handler(signum, frame):
-        print(f"Received signal {signum}")
+    def ignore_sigterm(signum, frame):
+        print(f"Received signal {signum} from Railway")
         if signum == signal.SIGTERM:
             print("Railway sent SIGTERM - but health checks are passing!")
             print("Ignoring SIGTERM to keep server running (Railway may be testing)")
-            # DON'T shutdown - Railway might just be testing
-            return
+            # Completely ignore SIGTERM - don't shut down
         elif signum == signal.SIGINT:
-            print("SIGINT received - shutting down gracefully")
-            asyncio.create_task(graceful_shutdown(runner))
+            print("SIGINT received - user requested shutdown")
+            # Allow SIGINT to work normally for development
+            raise KeyboardInterrupt()
 
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
-
-async def graceful_shutdown(runner):
-    """Gracefully shutdown the server"""
-    print("Starting graceful shutdown...")
-    shutdown_event.set()
-    
-    # Give tasks a moment to finish
-    await asyncio.sleep(2)
-    
-    try:
-        await runner.cleanup()
-        print("Server cleanup completed")
-    except Exception as e:
-        print(f"Error during cleanup: {e}")
-    finally:
-        # Stop the event loop
-        loop = asyncio.get_event_loop()
-        loop.stop()
+    signal.signal(signal.SIGTERM, ignore_sigterm)
+    signal.signal(signal.SIGINT, ignore_sigterm)
 
 async def create_app():
     """Create and configure the aiohttp application"""
@@ -311,7 +293,7 @@ def main():
         print("Server is ready to accept connections")
         
         # Setup signal handlers for graceful shutdown
-        setup_signal_handlers(runner)
+        setup_signal_handlers()
         
         # Keep the server running
         try:
