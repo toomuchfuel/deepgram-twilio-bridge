@@ -40,13 +40,17 @@ def sts_connect():
 
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
+    # Extract caller info from query parameters
+    caller_phone = request.query.get('From', 'unknown')
+    
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     
     print(f"WebSocket connection established on path: {request.path}")
+    print(f"Caller phone: {caller_phone}")  # Debug line
     
     try:
-        await twilio_handler(ws)
+        await twilio_handler(ws, caller_phone)  # Pass phone to handler
     except Exception as e:
         print(f"Error in WebSocket handler: {e}")
     finally:
@@ -55,16 +59,27 @@ async def websocket_handler(request):
     
     return ws
 
-async def twilio_handler(twilio_ws):
+async def twilio_handler(twilio_ws, caller_phone=None):
     """Handle Twilio WebSocket communication with Deepgram"""
     audio_queue = asyncio.Queue()
     streamsid_queue = asyncio.Queue()
     
     # Initialize session variables
-    caller_phone = None
     call_sid = None
     session_id = None
     caller_context = None
+
+    # Load caller context from database at start if we have phone number
+    if db and caller_phone and caller_phone != 'unknown':
+        try:
+            caller_data = await db.get_or_create_caller(caller_phone, "websocket-call")
+            session_id = caller_data['session_id']
+            caller_context = caller_data['context']
+            print(f"Loaded caller context - Session {caller_data['session_number']}")
+            if caller_data['context']['recent_sessions']:
+                print(f"Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+        except Exception as e:
+            print(f"Database error: {e}")
 
     try:
         async with sts_connect() as sts_ws:
@@ -148,6 +163,7 @@ async def twilio_handler(twilio_ws):
                                     if role and content:
                                         try:
                                             await db.add_message(session_id, role, content, decoded)
+                                            print(f"Stored message: {role} - {content[:50]}...")  # Debug
                                         except Exception as e:
                                             print(f"Error storing message: {e}")
                                 
@@ -191,27 +207,22 @@ async def twilio_handler(twilio_ws):
                                 
                                 if data["event"] == "start":
                                     print("Received Twilio start event")
-                                    print(f"DEBUG: Full start data: {data}")
+                                    print(f"DEBUG: Full start data: {data}")  # DEBUG LINE
                                     start = data["start"]
                                     streamsid = start["streamSid"]
                                     call_sid = start["callSid"]
                                     
                                     # Extract caller phone number (comes in start event)
-                                    caller_phone = start.get("from", "unknown")
-                                    print(f"Call from {caller_phone}, CallSid: {call_sid}")
+                                    caller_phone_from_event = start.get("from", caller_phone or "unknown")
+                                    print(f"Call from {caller_phone_from_event}, CallSid: {call_sid}")
                                     
-                                    # Load caller context from database
-                                    if db:
+                                    # Update session with actual call_sid if we have database
+                                    if db and session_id:
                                         try:
-                                            caller_data = await db.get_or_create_caller(caller_phone, call_sid)
-                                            session_id = caller_data['session_id']
-                                            caller_context = caller_data['context']
-                                            
-                                            print(f"Loaded caller context - Session {caller_data['session_number']}")
-                                            if caller_data['context']['recent_sessions']:
-                                                print(f"Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                                            # Update session with actual call_sid
+                                            pass  # Session already created, just continue
                                         except Exception as e:
-                                            print(f"Database error: {e}")
+                                            print(f"Database update error: {e}")
                                     
                                     streamsid_queue.put_nowait(streamsid)
                                     
