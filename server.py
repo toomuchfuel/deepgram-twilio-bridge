@@ -70,7 +70,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
     caller_context = None
 
     # Load caller context from database at start if we have phone number
-    if db and caller_phone and caller_phone != 'unknown':
+    if db and caller_phone:
         try:
             caller_data = await db.get_or_create_caller(caller_phone, "websocket-call")
             session_id = caller_data['session_id']
