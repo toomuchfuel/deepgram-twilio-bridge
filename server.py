@@ -80,7 +80,7 @@ async def twilio_handler(twilio_ws):
                     "speak": {
                         "provider": {
                             "type": "deepgram",
-                            "model": "aura-2-thalia-en"
+                            "model": "aura-2-theia-en"
                         }
                     },
                     "greeting": "Hello! How can I help you today?"
