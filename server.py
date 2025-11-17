@@ -94,11 +94,24 @@ def format_actual_conversation_context(recent_sessions):
     for i, session_data in enumerate(recent_sessions[-3:]):  # Last 3 sessions only
         session_num = session_data.get('session_number', 'Unknown')
         transcript = session_data.get('full_transcript', [])
+
+        # 🔧 NORMALISE: make sure every item is a dict with 'content' and 'speaker'
+        normalized = []
+        for item in transcript:
+            if isinstance(item, dict):
+                normalized.append(item)
+            else:
+                # If DB stored plain text, wrap it
+                normalized.append({
+                    "content": str(item),
+                    # Best guess if not stored – adjust if your DB has this info elsewhere
+                    "speaker": "user"
+                })
+        transcript = normalized
         
         print(f"🔍 DEBUG: Session {session_num} has {len(transcript) if transcript else 0} messages")
         
         if transcript:
-            # Extract key user statements and AI responses
             key_exchanges = []
             for j, msg in enumerate(transcript):
                 content = msg.get('content', '').strip()
@@ -107,17 +120,20 @@ def format_actual_conversation_context(recent_sessions):
                 print(f"🔍 DEBUG: Message {j}: {speaker} - {content[:50]}...")
                 
                 # Skip generic greetings and very short responses
-                if len(content) > 15 and not content.startswith(('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')):
+                if len(content) > 15 and not content.startswith(
+                    ('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')
+                ):
                     if speaker == 'user':
                         key_exchanges.append(f"User said: \"{content}\"")
                         print(f"🔍 DEBUG: Added user statement: {content[:30]}...")
-                    elif speaker == 'ai' and ('mentioned' in content or 'talked about' in content or 'remember' in content):
+                    elif speaker == 'ai' and (
+                        'mentioned' in content or 'talked about' in content or 'remember' in content
+                    ):
                         # Skip AI's generic memory claims that might be wrong
                         print(f"🔍 DEBUG: Skipped AI memory claim: {content[:30]}...")
                         continue
             
             if key_exchanges:
-                # Take the most meaningful exchanges
                 meaningful_exchanges = key_exchanges[-6:]  # Last 6 meaningful statements
                 session_summary = f"Session {session_num}: " + " | ".join(meaningful_exchanges)
                 context_parts.append(session_summary)
