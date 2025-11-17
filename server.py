@@ -120,13 +120,13 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
     # Initialize session variables
     session_id = None
     caller_context = None
+    ai_prompt = VOICE_AGENT_PERSONALITY  # Start with base prompt
 
     try:
         async with sts_connect() as sts_ws:
-            # We'll build the AI prompt after we get caller info from Twilio parameters
-            ai_prompt = VOICE_AGENT_PERSONALITY
+            # We'll update the AI prompt after we get caller info from Twilio parameters
             
-            # Send configuration to Deepgram
+            # Send initial configuration to Deepgram (will be updated later if needed)
             config_message = {
                 "type": "Settings",
                 "audio": {
@@ -205,8 +205,10 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                                     content = decoded.get('content')
                                     if role and content:
                                         try:
-                                            await db.add_message(session_id, role, content, decoded)
-                                            print(f"💬 Stored message: {role} - {content[:50]}...")
+                                            # Map Deepgram roles to database-compatible roles
+                                            db_role = 'ai' if role == 'assistant' else role
+                                            await db.add_message(session_id, db_role, content, decoded)
+                                            print(f"💬 Stored message: {db_role} - {content[:50]}...")
                                         except Exception as e:
                                             print(f"Error storing message: {e}")
                                 
@@ -238,7 +240,7 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                 print("📱 twilio_receiver started")
                 BUFFER_SIZE = 20 * 160  # Buffer 20 messages (0.4 seconds)
                 inbuffer = bytearray(b"")
-                nonlocal session_id  # Allow modification of session_id
+                nonlocal session_id, ai_prompt  # Allow modification of session_id and ai_prompt
                 
                 try:
                     async for msg in twilio_ws:
@@ -267,9 +269,41 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                                             try:
                                                 caller_data = await db.get_or_create_caller(caller_phone, call_sid)
                                                 session_id = caller_data['session_id']
+                                                caller_context = caller_data['context']
+                                                
                                                 print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
                                                 if caller_data['context']['recent_sessions']:
                                                     print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                                                    
+                                                    # Format context for AI system prompt
+                                                    context_summary = format_context_for_va(caller_context, caller_data['caller'])
+                                                    
+                                                    # Update AI prompt with conversation history
+                                                    ai_prompt_with_context = f"""{VOICE_AGENT_PERSONALITY}
+
+CALLER CONTEXT:
+{context_summary}
+
+Remember this caller and refer to previous conversations naturally when relevant. Ask follow-up questions about things they've mentioned before."""
+                                                    
+                                                    # Send updated configuration with context
+                                                    updated_config = {
+                                                        "type": "Settings",
+                                                        "agent": {
+                                                            "think": {
+                                                                "provider": {
+                                                                    "type": "open_ai",
+                                                                    "model": LLM_MODEL,
+                                                                    "temperature": LLM_TEMPERATURE
+                                                                },
+                                                                "prompt": ai_prompt_with_context
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    await sts_ws.send(json.dumps(updated_config))
+                                                    print(f"🧠 AI prompt updated with caller context")
+                                                
                                             except Exception as e:
                                                 print(f"❌ Database error: {e}")
                                     else:
@@ -424,7 +458,7 @@ def main():
         
         print(f"🌟 Server running on 0.0.0.0:{port}")
         print("🎯 Server is ready to accept connections")
-        print("📋 Now change back to webhook URL in Twilio Console")
+        print("💭 AI memory and complete transcripts now enabled!")
         
         # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
