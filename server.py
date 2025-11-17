@@ -88,16 +88,18 @@ async def websocket_handler(request):
     print(f"🔍 WEBSOCKET DEBUG: Incoming connection from {request.remote}")
     print(f"🔍 Headers: {dict(request.headers)}")
     print(f"🔍 Query params: {dict(request.query)}")
-    # Extract caller info from query parameters (sent by voice webhook)
-    caller_phone = request.query.get('From', 'unknown')
-    call_sid = request.query.get('CallSid', 'unknown')
     
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     
     print(f"📞 WebSocket connection established on path: {request.path}")
-    print(f"📱 Caller phone: {caller_phone}")
-    print(f"🆔 Call SID: {call_sid}")
+    
+    # We'll get caller info from Twilio start event parameters now
+    caller_phone = 'unknown'
+    call_sid = 'unknown'
+    
+    print(f"📱 Caller phone: {caller_phone} (will be updated from Twilio parameters)")
+    print(f"🆔 Call SID: {call_sid} (will be updated from Twilio parameters)")
     
     try:
         await twilio_handler(ws, caller_phone, call_sid)
@@ -272,15 +274,31 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                                 data = json.loads(msg.data)
                                 
                                 if data["event"] == "start":
-                                    print("🚀 Received Twilio start event")
-                                    start = data["start"]
-                                    streamsid = start["streamSid"]
-                                    actual_call_sid = start["callSid"]
-                                    
-                                    print(f"🔗 Stream ID: {streamsid}")
-                                    print(f"☎️ Actual Call SID: {actual_call_sid}")
-                                    
-                                    streamsid_queue.put_nowait(streamsid)
+    print("🚀 Received Twilio start event")
+    start = data["start"]
+    streamsid = start["streamSid"]
+    actual_call_sid = start["callSid"]
+    
+    # Extract caller info from parameters (sent via TwiML)
+    custom_params = start.get("customParameters", {})
+    if custom_params:
+        caller_phone = custom_params.get("caller", "unknown")
+        call_sid = custom_params.get("callsid", actual_call_sid)
+        print(f"📱 Updated caller info from parameters: {caller_phone}")
+        
+        # Now load database context with real phone number
+        if db and caller_phone != 'unknown':
+            try:
+                caller_data = await db.get_or_create_caller(caller_phone, call_sid)
+                session_id = caller_data['session_id']
+                print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
+            except Exception as e:
+                print(f"❌ Database error: {e}")
+    
+    print(f"🔗 Stream ID: {streamsid}")
+    print(f"☎️ Actual Call SID: {actual_call_sid}")
+    
+    streamsid_queue.put_nowait(streamsid)
                                     
                                 elif data["event"] == "connected":
                                     print("✅ Twilio connected")
