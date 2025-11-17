@@ -1,3 +1,4 @@
 aiohttp==3.10.11
 websockets==11.0.3
 asyncpg==0.29.0
+aiohttp-cors
