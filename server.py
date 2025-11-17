@@ -49,7 +49,7 @@ async def voice_webhook_handler(request):
         
         # Get the host from the request to build the WebSocket URL
         host = request.host
-        protocol = 'wss' if request.scheme == 'https' else 'ws'
+        protocol = 'wss'
         
         # Build WebSocket URL with caller info
         websocket_url = f"{protocol}://{host}/twilio?From={caller_phone}&CallSid={call_sid}"
