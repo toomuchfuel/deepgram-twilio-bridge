@@ -38,19 +38,60 @@ def sts_connect():
     )
     return sts_ws
 
+async def voice_webhook_handler(request):
+    """Handle initial Twilio voice webhook and capture caller info"""
+    try:
+        form_data = await request.post()
+        caller_phone = form_data.get('From', 'unknown')
+        call_sid = form_data.get('CallSid', 'unknown')
+        
+        print(f"🎯 Voice webhook: Call from {caller_phone}, CallSid: {call_sid}")
+        
+        # Get the host from the request to build the WebSocket URL
+        host = request.host
+        protocol = 'wss' if request.scheme == 'https' else 'ws'
+        
+        # Build WebSocket URL with caller info
+        websocket_url = f"{protocol}://{host}/twilio?From={caller_phone}&CallSid={call_sid}"
+        
+        print(f"🔗 Connecting to WebSocket: {websocket_url}")
+        
+        # Return TwiML that connects to WebSocket with caller info
+        twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Connect>
+        <Stream url="{websocket_url}"/>
+    </Connect>
+</Response>'''
+        
+        return web.Response(text=twiml_response, content_type='application/xml')
+    
+    except Exception as e:
+        print(f"Error in voice webhook: {e}")
+        # Fallback TwiML
+        return web.Response(
+            text='''<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say>Sorry, there was a connection error. Please try calling again.</Say>
+</Response>''',
+            content_type='application/xml'
+        )
+
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
-    # Extract caller info from query parameters
+    # Extract caller info from query parameters (sent by voice webhook)
     caller_phone = request.query.get('From', 'unknown')
+    call_sid = request.query.get('CallSid', 'unknown')
     
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     
-    print(f"WebSocket connection established on path: {request.path}")
-    print(f"Caller phone: {caller_phone}")  # Debug line
+    print(f"📞 WebSocket connection established on path: {request.path}")
+    print(f"📱 Caller phone: {caller_phone}")
+    print(f"🆔 Call SID: {call_sid}")
     
     try:
-        await twilio_handler(ws, caller_phone)  # Pass phone to handler
+        await twilio_handler(ws, caller_phone, call_sid)
     except Exception as e:
         print(f"Error in WebSocket handler: {e}")
     finally:
@@ -59,30 +100,46 @@ async def websocket_handler(request):
     
     return ws
 
-async def twilio_handler(twilio_ws, caller_phone=None):
+async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
     """Handle Twilio WebSocket communication with Deepgram"""
     audio_queue = asyncio.Queue()
     streamsid_queue = asyncio.Queue()
     
     # Initialize session variables
-    call_sid = None
     session_id = None
     caller_context = None
 
     # Load caller context from database at start if we have phone number
-    if db and caller_phone:
+    if db and caller_phone and caller_phone != 'unknown':
         try:
-            caller_data = await db.get_or_create_caller(caller_phone, "websocket-call")
+            caller_data = await db.get_or_create_caller(caller_phone, call_sid or "websocket-call")
             session_id = caller_data['session_id']
             caller_context = caller_data['context']
-            print(f"Loaded caller context - Session {caller_data['session_number']}")
+            
+            print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
             if caller_data['context']['recent_sessions']:
-                print(f"Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                
+                # Format context for AI system prompt
+                context_summary = format_context_for_va(caller_context, caller_data['caller'])
+                print(f"🧠 Context summary prepared for AI")
+            else:
+                context_summary = ""
         except Exception as e:
-            print(f"Database error: {e}")
+            print(f"❌ Database error: {e}")
+            context_summary = ""
+    else:
+        print(f"⚠️ No caller context loaded (phone: {caller_phone})")
+        context_summary = ""
 
     try:
         async with sts_connect() as sts_ws:
+            # Build AI system prompt with caller context
+            ai_prompt = VOICE_AGENT_PERSONALITY
+            if context_summary:
+                ai_prompt += f"\n\nContext from previous conversations:\n{context_summary}"
+                print(f"🎯 AI prompt enhanced with caller context")
+            
             # Send configuration to Deepgram
             config_message = {
                 "type": "Settings",
@@ -111,7 +168,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
                             "model": LLM_MODEL,
                             "temperature": LLM_TEMPERATURE
                         },
-                        "prompt": VOICE_AGENT_PERSONALITY
+                        "prompt": ai_prompt  # Now includes caller context!
                     },
                     "speak": {
                         "provider": {
@@ -124,11 +181,11 @@ async def twilio_handler(twilio_ws, caller_phone=None):
             }
 
             await sts_ws.send(json.dumps(config_message))
-            print("Configuration sent to Deepgram")
+            print("⚙️ Configuration sent to Deepgram with caller context")
 
             async def sts_sender():
                 """Send audio from Twilio to Deepgram"""
-                print("sts_sender started")
+                print("🎤 sts_sender started")
                 try:
                     while not shutdown_event.is_set():
                         try:
@@ -141,18 +198,18 @@ async def twilio_handler(twilio_ws, caller_phone=None):
 
             async def sts_receiver():
                 """Receive audio from Deepgram and send to Twilio"""
-                print("sts_receiver started")
+                print("🔊 sts_receiver started")
                 try:
                     # Wait for stream ID from Twilio
                     streamsid = await streamsid_queue.get()
-                    print(f"Got stream ID: {streamsid}")
+                    print(f"🌊 Got stream ID: {streamsid}")
                     
                     async for message in sts_ws:
                         if shutdown_event.is_set():
                             break
                             
                         if type(message) is str:
-                            print(f"Deepgram message: {message}")
+                            print(f"📨 Deepgram message: {message}")
                             try:
                                 decoded = json.loads(message)
                                 
@@ -163,7 +220,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
                                     if role and content:
                                         try:
                                             await db.add_message(session_id, role, content, decoded)
-                                            print(f"Stored message: {role} - {content[:50]}...")  # Debug
+                                            print(f"💬 Stored message: {role} - {content[:50]}...")
                                         except Exception as e:
                                             print(f"Error storing message: {e}")
                                 
@@ -192,7 +249,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
 
             async def twilio_receiver():
                 """Receive audio from Twilio and buffer for Deepgram"""
-                print("twilio_receiver started")
+                print("📱 twilio_receiver started")
                 BUFFER_SIZE = 20 * 160  # Buffer 20 messages (0.4 seconds)
                 inbuffer = bytearray(b"")
                 
@@ -206,28 +263,18 @@ async def twilio_handler(twilio_ws, caller_phone=None):
                                 data = json.loads(msg.data)
                                 
                                 if data["event"] == "start":
-                                    print("Received Twilio start event")
-                                    print(f"DEBUG: Full start data: {data}")  # DEBUG LINE
+                                    print("🚀 Received Twilio start event")
                                     start = data["start"]
                                     streamsid = start["streamSid"]
-                                    call_sid = start["callSid"]
+                                    actual_call_sid = start["callSid"]
                                     
-                                    # Extract caller phone number (comes in start event)
-                                    caller_phone_from_event = start.get("from", caller_phone or "unknown")
-                                    print(f"Call from {caller_phone_from_event}, CallSid: {call_sid}")
-                                    
-                                    # Update session with actual call_sid if we have database
-                                    if db and session_id:
-                                        try:
-                                            # Update session with actual call_sid
-                                            pass  # Session already created, just continue
-                                        except Exception as e:
-                                            print(f"Database update error: {e}")
+                                    print(f"🔗 Stream ID: {streamsid}")
+                                    print(f"☎️ Actual Call SID: {actual_call_sid}")
                                     
                                     streamsid_queue.put_nowait(streamsid)
                                     
                                 elif data["event"] == "connected":
-                                    print("Twilio connected")
+                                    print("✅ Twilio connected")
                                     
                                 elif data["event"] == "media":
                                     media = data["media"]
@@ -236,7 +283,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
                                         inbuffer.extend(chunk)
                                         
                                 elif data["event"] == "stop":
-                                    print("Twilio stop event")
+                                    print("🛑 Twilio stop event")
                                     
                                     # End database session
                                     if session_id and db:
@@ -244,7 +291,7 @@ async def twilio_handler(twilio_ws, caller_phone=None):
                                             # Generate simple summary based on messages
                                             summary = f"Phone call session - discussed various topics"
                                             await db.end_session(session_id, summary)
-                                            print(f"Session {session_id} ended and saved")
+                                            print(f"💾 Session {session_id} ended and saved")
                                         except Exception as e:
                                             print(f"Error ending session: {e}")
                                     
@@ -291,7 +338,7 @@ async def health_check(request):
 async def root_handler(request):
     """Root endpoint handler"""
     return web.Response(
-        text="Twilio-Deepgram Bridge Server", 
+        text="Twilio-Deepgram Bridge Server with Caller ID Support", 
         status=200,
         headers={'Content-Type': 'text/plain'}
     )
@@ -319,13 +366,13 @@ async def create_app():
     # Middleware for request logging
     @web.middleware
     async def logging_middleware(request, handler):
-        print(f"Request: {request.method} {request.path} from {request.remote}")
+        print(f"🌐 Request: {request.method} {request.path} from {request.remote}")
         try:
             response = await handler(request)
-            print(f"Response: {request.method} {request.path} -> {response.status}")
+            print(f"✅ Response: {request.method} {request.path} -> {response.status}")
             return response
         except Exception as e:
-            print(f"Error handling {request.method} {request.path}: {e}")
+            print(f"❌ Error handling {request.method} {request.path}: {e}")
             raise
     
     app.middlewares.append(logging_middleware)
@@ -333,7 +380,8 @@ async def create_app():
     # Routes
     app.router.add_get('/', root_handler)
     app.router.add_get('/health', health_check)
-    app.router.add_get('/twilio', websocket_handler)
+    app.router.add_post('/webhook/voice', voice_webhook_handler)  # NEW: Twilio voice webhook
+    app.router.add_get('/twilio', websocket_handler)  # WebSocket endpoint
     
     return app
 
@@ -342,15 +390,16 @@ def main():
     # Get port from environment (Railway sets this automatically)
     port = int(os.environ.get("PORT", 5000))
     
-    print(f"Starting Twilio-Deepgram Bridge Server on port {port}")
-    print(f"Health check endpoint: http://0.0.0.0:{port}/health")
-    print(f"WebSocket endpoint: ws://0.0.0.0:{port}/twilio")
+    print(f"🚀 Starting Twilio-Deepgram Bridge Server on port {port}")
+    print(f"🔍 Health check endpoint: http://0.0.0.0:{port}/health")
+    print(f"📞 Voice webhook: http://0.0.0.0:{port}/webhook/voice")
+    print(f"🔌 WebSocket endpoint: ws://0.0.0.0:{port}/twilio")
     
     # Check for required environment variables
     if not os.getenv('DEEPGRAM_API_KEY'):
-        print("WARNING: DEEPGRAM_API_KEY not found in environment variables")
+        print("⚠️ WARNING: DEEPGRAM_API_KEY not found in environment variables")
     else:
-        print("DEEPGRAM_API_KEY found in environment")
+        print("✅ DEEPGRAM_API_KEY found in environment")
 
     async def run_server():
         # Initialize database first
@@ -366,8 +415,13 @@ def main():
         site = web.TCPSite(runner, '0.0.0.0', port)
         await site.start()
         
-        print(f"Server running on 0.0.0.0:{port}")
-        print("Server is ready to accept connections")
+        print(f"🌟 Server running on 0.0.0.0:{port}")
+        print("🎯 Server is ready to accept connections")
+        print("📋 SETUP INSTRUCTIONS:")
+        print(f"   1. In Twilio Console, set your phone number webhook to:")
+        print(f"      https://your-app-name.railway.app/webhook/voice")
+        print(f"   2. Set HTTP method to POST")
+        print(f"   3. Remove any TwiML Bin configuration")
         
         # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
