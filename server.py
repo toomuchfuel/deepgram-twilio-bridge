@@ -144,38 +144,56 @@ async def bulk_cleanup_handler(request):
     if not db:
         return web.Response(text="Database not available", status=500)
     
+    def normalize_phone(phone):
+        """Normalize phone number format"""
+        if not phone:
+            return None
+        phone = phone.strip()
+        phone = phone.replace(" ", "")  # Remove all spaces
+        
+        # Handle different formats
+        if phone.startswith("0"):
+            phone = "+61" + phone[1:]
+        elif phone.startswith("61") and not phone.startswith("+"):
+            phone = "+" + phone
+        elif not phone.startswith("+") and phone.isdigit():
+            phone = "+61" + phone
+            
+        return phone
+    
     try:
         # Get query parameters
         params = request.query
         action = params.get('action', '')
-        caller_phone = params.get('phone', '')
+        raw_phone = params.get('phone', '')
         days_old = int(params.get('days', 7))
         
-        # Fix phone number format if needed
-        if caller_phone and not caller_phone.startswith('+'):
-            caller_phone = '+' + caller_phone
-            
-        print(f"🔍 DEBUG: Cleanup action={action}, phone='{caller_phone}', days={days_old}")
+        # Normalize phone number properly
+        caller_phone = normalize_phone(raw_phone)
+        
+        print(f"🔍 DEBUG: Cleanup action={action}, raw_phone='{raw_phone}', normalized_phone='{caller_phone}', days={days_old}")
         
         if action == 'delete_old_sessions':
             # Delete sessions older than X days using correct schema
             async with db.pool.acquire() as conn:
                 # First delete messages from old sessions
-                result1 = await conn.execute(f'''
+                result1 = await conn.fetchval(f'''
                     DELETE FROM messages 
                     WHERE session_id IN (
                         SELECT session_id FROM sessions 
                         WHERE created_at < NOW() - INTERVAL '{days_old} days'
                     )
+                    RETURNING COUNT(*)
                 ''')
                 
                 # Then delete old sessions
-                result2 = await conn.execute(f'''
+                result2 = await conn.fetchval(f'''
                     DELETE FROM sessions 
                     WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                    RETURNING COUNT(*)
                 ''')
                 
-            return web.Response(text=f"Deleted old data: {result1} messages, {result2} sessions (older than {days_old} days)")
+            return web.Response(text=f"Deleted old data: {result1 or 0} messages, {result2 or 0} sessions (older than {days_old} days)")
             
         elif action == 'delete_caller_data' and caller_phone:
             # Delete all data for specific caller using actual schema
@@ -191,38 +209,45 @@ async def bulk_cleanup_handler(request):
                 
                 print(f"🔍 DEBUG: Found {len(sessions_to_delete)} sessions for {caller_phone}")
                 for session in sessions_to_delete:
-                    print(f"🔍 DEBUG: Session {session['session_id'][:8]}... created {session['created_at']}")
+                    session_id_str = str(session['session_id'])
+                    print(f"🔍 DEBUG: Session {session_id_str[:8]}... created {session['created_at']}")
                 
                 if sessions_to_delete:
                     # Delete messages for this caller's sessions
-                    result1 = await conn.execute('''
+                    result1 = await conn.fetchval('''
                         DELETE FROM messages 
                         WHERE session_id IN (
                             SELECT session_id FROM sessions 
                             WHERE caller_phone = $1
                         )
+                        RETURNING COUNT(*)
                     ''', caller_phone)
                     
-                    # Then delete sessions for this caller
-                    result2 = await conn.execute('''
+                    # Then delete sessions for this caller  
+                    result2 = await conn.fetchval('''
                         DELETE FROM sessions 
                         WHERE caller_phone = $1
+                        RETURNING COUNT(*)
                     ''', caller_phone)
                     
-                    print(f"🔍 DEBUG: Deleted {result1} messages, {result2} sessions")
+                    print(f"🔍 DEBUG: Deleted {result1 or 0} messages, {result2 or 0} sessions")
                 else:
                     result1 = result2 = 0
                     print(f"🔍 DEBUG: No sessions found for {caller_phone}")
                 
                 # Finally delete from callers table if it exists
                 try:
-                    result3 = await conn.execute('DELETE FROM callers WHERE phone_number = $1', caller_phone)
-                    print(f"🔍 DEBUG: Deleted {result3} caller records")
+                    result3 = await conn.fetchval('''
+                        DELETE FROM callers 
+                        WHERE phone_number = $1 
+                        RETURNING COUNT(*)
+                    ''', caller_phone)
+                    print(f"🔍 DEBUG: Deleted {result3 or 0} caller records")
                 except Exception as e:
                     print(f"🔍 DEBUG: Callers table error (probably doesn't exist): {e}")
                     result3 = 0
                 
-            return web.Response(text=f"Deleted caller {caller_phone}: {result1} messages, {result2} sessions, {result3} caller records")
+            return web.Response(text=f"Deleted caller {caller_phone}: {result1 or 0} messages, {result2 or 0} sessions, {result3 or 0} caller records")
             
         elif action == 'count_records':
             # Count current records using actual schema
@@ -245,7 +270,7 @@ async def bulk_cleanup_handler(request):
             
             # Generate proper cleanup URL for first caller
             cleanup_phone = caller_breakdown[0]['caller_phone'] if caller_breakdown else '+61412247247'
-            cleanup_url = f"/cleanup?action=delete_caller_data&phone={cleanup_phone}"
+            cleanup_url = f"/cleanup?action=delete_caller_data&phone={cleanup_phone.replace('+', '%2B')}"
             
             return web.Response(text=f'''Database Records:
 - {unique_callers} unique callers
@@ -264,7 +289,7 @@ To delete your data, use:
 Available cleanup operations:
 - /cleanup?action=count_records
 - /cleanup?action=delete_old_sessions&days=7  
-- /cleanup?action=delete_caller_data&phone=+61412247247
+- /cleanup?action=delete_caller_data&phone=%2B61412247247
 
 Example: /cleanup?action=delete_old_sessions&days=3
 ''', status=400)
