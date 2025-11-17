@@ -47,22 +47,28 @@ async def voice_webhook_handler(request):
         
         print(f"🎯 Voice webhook: Call from {caller_phone}, CallSid: {call_sid}")
         
-        # Get the host from the request to build the WebSocket URL
-        host = request.host
-        protocol = 'wss'
+        # Store caller info for WebSocket to retrieve
+        active_sessions[call_sid] = {
+            'caller_phone': caller_phone,
+            'timestamp': time.time()
+        }
         
-        # Build WebSocket URL with caller info
-        websocket_url = f"{protocol}://{host}/twilio?From={caller_phone}&CallSid={call_sid}"
+        # Build WebSocket URL (same format as working direct TwiML)
+        host = request.host
+        websocket_url = f"wss://{host}/twilio"
         
         print(f"🔗 Connecting to WebSocket: {websocket_url}")
         
-        # Return TwiML that connects to WebSocket with caller info
-        twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
+        # Return EXACT same TwiML format as working version
+        twiml_response = '''<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
-        <Stream url="{websocket_url}"/>
+        <Stream url="wss://voice-bridge-backend-production.up.railway.app/twilio">
+            <Parameter name="caller" value="{}"/>
+            <Parameter name="callsid" value="{}"/>
+        </Stream>
     </Connect>
-</Response>'''
+</Response>'''.format(caller_phone, call_sid)
         
         return web.Response(text=twiml_response, content_type='application/xml')
     
