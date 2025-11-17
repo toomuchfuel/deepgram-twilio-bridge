@@ -22,6 +22,7 @@ async def initialize_database():
         db = LogosDatabase()
         await db.connect()
         print("Database connected successfully")
+        print("Database tables created successfully")
     except Exception as e:
         print(f"Database connection failed: {e}")
         # Continue without database for now
@@ -86,25 +87,33 @@ async def voice_webhook_handler(request):
 
 def format_actual_conversation_context(recent_sessions):
     """Format actual conversation content for AI context instead of generic summaries"""
+    print(f"🔍 DEBUG: Formatting context for {len(recent_sessions)} sessions")
+    
     context_parts = []
     
-    for session_data in recent_sessions[-3:]:  # Last 3 sessions only
+    for i, session_data in enumerate(recent_sessions[-3:]):  # Last 3 sessions only
         session_num = session_data.get('session_number', 'Unknown')
         transcript = session_data.get('full_transcript', [])
+        
+        print(f"🔍 DEBUG: Session {session_num} has {len(transcript) if transcript else 0} messages")
         
         if transcript:
             # Extract key user statements and AI responses
             key_exchanges = []
-            for msg in transcript:
+            for j, msg in enumerate(transcript):
                 content = msg.get('content', '').strip()
                 speaker = msg.get('speaker', '')
+                
+                print(f"🔍 DEBUG: Message {j}: {speaker} - {content[:50]}...")
                 
                 # Skip generic greetings and very short responses
                 if len(content) > 15 and not content.startswith(('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')):
                     if speaker == 'user':
                         key_exchanges.append(f"User said: \"{content}\"")
+                        print(f"🔍 DEBUG: Added user statement: {content[:30]}...")
                     elif speaker == 'ai' and ('mentioned' in content or 'talked about' in content or 'remember' in content):
                         # Skip AI's generic memory claims that might be wrong
+                        print(f"🔍 DEBUG: Skipped AI memory claim: {content[:30]}...")
                         continue
             
             if key_exchanges:
@@ -112,15 +121,104 @@ def format_actual_conversation_context(recent_sessions):
                 meaningful_exchanges = key_exchanges[-6:]  # Last 6 meaningful statements
                 session_summary = f"Session {session_num}: " + " | ".join(meaningful_exchanges)
                 context_parts.append(session_summary)
+                print(f"🔍 DEBUG: Session {session_num} summary: {len(meaningful_exchanges)} meaningful exchanges")
+            else:
+                print(f"🔍 DEBUG: Session {session_num} had no meaningful exchanges")
     
     if context_parts:
-        return f"""
+        full_context = f"""
 ACTUAL CONVERSATION HISTORY:
 {chr(10).join(context_parts)}
 
 IMPORTANT: Only reference what the user actually said above. Do NOT make up details about hobbies, goals, or activities they never mentioned. If you're not sure about something from previous conversations, ask them to remind you rather than guessing."""
+        
+        print(f"🔍 DEBUG: Final context length: {len(full_context)} characters")
+        print(f"🔍 DEBUG: Context preview: {full_context[:300]}...")
+        return full_context
     
+    print(f"🔍 DEBUG: No meaningful context found")
     return ""
+
+async def bulk_cleanup_handler(request):
+    """HTTP endpoint for bulk cleanup operations"""
+    if not db:
+        return web.Response(text="Database not available", status=500)
+    
+    try:
+        # Get query parameters
+        params = request.query
+        action = params.get('action', '')
+        caller_phone = params.get('phone', '')
+        days_old = int(params.get('days', 7))
+        
+        if action == 'delete_old_sessions':
+            # Delete sessions older than X days
+            query = '''
+                DELETE FROM messages 
+                WHERE session_id IN (
+                    SELECT session_id FROM sessions 
+                    WHERE created_at < NOW() - INTERVAL '%s days'
+                )
+            '''
+            async with db.pool.acquire() as conn:
+                result1 = await conn.execute(query, days_old)
+                
+                query2 = '''
+                    DELETE FROM sessions 
+                    WHERE created_at < NOW() - INTERVAL '%s days'
+                '''
+                result2 = await conn.execute(query2, days_old)
+                
+            return web.Response(text=f"Deleted old sessions and messages: {result1} messages, {result2} sessions")
+            
+        elif action == 'delete_caller_data' and caller_phone:
+            # Delete all data for specific caller
+            async with db.pool.acquire() as conn:
+                # First delete messages
+                result1 = await conn.execute('''
+                    DELETE FROM messages 
+                    WHERE session_id IN (
+                        SELECT s.session_id FROM sessions s
+                        JOIN callers c ON s.caller_id = c.caller_id
+                        WHERE c.phone_number = $1
+                    )
+                ''', caller_phone)
+                
+                # Then delete sessions
+                result2 = await conn.execute('''
+                    DELETE FROM sessions 
+                    WHERE caller_id IN (
+                        SELECT caller_id FROM callers WHERE phone_number = $1
+                    )
+                ''', caller_phone)
+                
+                # Finally delete caller
+                result3 = await conn.execute('DELETE FROM callers WHERE phone_number = $1', caller_phone)
+                
+            return web.Response(text=f"Deleted caller {caller_phone}: {result1} messages, {result2} sessions, {result3} caller records")
+            
+        elif action == 'count_records':
+            # Count current records
+            async with db.pool.acquire() as conn:
+                callers_count = await conn.fetchval('SELECT COUNT(*) FROM callers')
+                sessions_count = await conn.fetchval('SELECT COUNT(*) FROM sessions') 
+                messages_count = await conn.fetchval('SELECT COUNT(*) FROM messages')
+                
+            return web.Response(text=f"Records: {callers_count} callers, {sessions_count} sessions, {messages_count} messages")
+            
+        else:
+            return web.Response(text='''
+Available cleanup operations:
+- /cleanup?action=count_records
+- /cleanup?action=delete_old_sessions&days=7
+- /cleanup?action=delete_caller_data&phone=+61412247247
+
+Example: /cleanup?action=delete_old_sessions&days=3
+''', status=400)
+            
+    except Exception as e:
+        print(f"Error in cleanup: {e}")
+        return web.Response(text=f"Cleanup error: {e}", status=500)
 
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
@@ -251,13 +349,18 @@ async def twilio_handler(twilio_ws):
         
         if db and caller_phone != 'unknown':
             try:
+                print(f"🔍 DEBUG: Loading context for {caller_phone}")
                 caller_data = await db.get_or_create_caller(caller_phone, call_sid or "websocket-call")
                 session_id = caller_data['session_id']
                 caller_context = caller_data['context']
                 
                 print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
+                print(f"🔍 DEBUG: Caller data keys: {list(caller_data.keys())}")
+                print(f"🔍 DEBUG: Context keys: {list(caller_context.keys()) if caller_context else 'None'}")
+                
                 if caller_data['context']['recent_sessions']:
                     print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                    print(f"🔍 DEBUG: Recent sessions structure: {type(caller_data['context']['recent_sessions'])}")
                     
                     # Format ACTUAL conversation content instead of generic summaries
                     actual_context = format_actual_conversation_context(caller_data['context']['recent_sessions'])
@@ -271,10 +374,16 @@ async def twilio_handler(twilio_ws):
 Remember: Only refer to what this caller actually said in previous conversations. If you're unsure about details, ask them to remind you instead of guessing."""
                         
                         print(f"🧠 AI prompt enhanced with ACTUAL conversation content")
-                        print(f"📝 Context preview: {actual_context[:200]}...")
+                        print(f"📝 Full AI prompt preview: {ai_prompt[:500]}...")
+                    else:
+                        print(f"🔍 DEBUG: No actual context generated")
+                else:
+                    print(f"🔍 DEBUG: No previous sessions found")
                     
-                except Exception as e:
-                    print(f"❌ Database error: {e}")
+            except Exception as e:
+                print(f"❌ Database error: {e}")
+                import traceback
+                print(f"🔍 DEBUG: Full traceback: {traceback.format_exc()}")
 
         # NOW set up Deepgram with the complete AI prompt
         async with sts_connect() as sts_ws:
@@ -456,6 +565,7 @@ async def create_app():
     app.router.add_get('/health', health_check)
     app.router.add_post('/webhook/voice', voice_webhook_handler)  # Twilio voice webhook
     app.router.add_get('/twilio', websocket_handler)  # WebSocket endpoint
+    app.router.add_get('/cleanup', bulk_cleanup_handler)  # Bulk cleanup operations
     
     return app
 
@@ -468,6 +578,7 @@ def main():
     print(f"🔍 Health check endpoint: http://0.0.0.0:{port}/health")
     print(f"📞 Voice webhook: http://0.0.0.0:{port}/webhook/voice")
     print(f"🔌 WebSocket endpoint: ws://0.0.0.0:{port}/twilio")
+    print(f"🗑️ Cleanup endpoint: http://0.0.0.0:{port}/cleanup")
     
     # Check for required environment variables
     if not os.getenv('DEEPGRAM_API_KEY'):
@@ -491,7 +602,8 @@ def main():
         
         print(f"🌟 Server running on 0.0.0.0:{port}")
         print("🎯 Server is ready to accept connections")
-        print("💬 AI now uses ACTUAL conversation content - no more hallucinations!")
+        print("💬 AI memory with comprehensive debug logging enabled!")
+        print("🗑️ Use /cleanup endpoint for bulk database operations")
         
         # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
