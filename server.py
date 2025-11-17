@@ -84,6 +84,44 @@ async def voice_webhook_handler(request):
             content_type='application/xml'
         )
 
+def format_actual_conversation_context(recent_sessions):
+    """Format actual conversation content for AI context instead of generic summaries"""
+    context_parts = []
+    
+    for session_data in recent_sessions[-3:]:  # Last 3 sessions only
+        session_num = session_data.get('session_number', 'Unknown')
+        transcript = session_data.get('full_transcript', [])
+        
+        if transcript:
+            # Extract key user statements and AI responses
+            key_exchanges = []
+            for msg in transcript:
+                content = msg.get('content', '').strip()
+                speaker = msg.get('speaker', '')
+                
+                # Skip generic greetings and very short responses
+                if len(content) > 15 and not content.startswith(('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')):
+                    if speaker == 'user':
+                        key_exchanges.append(f"User said: \"{content}\"")
+                    elif speaker == 'ai' and ('mentioned' in content or 'talked about' in content or 'remember' in content):
+                        # Skip AI's generic memory claims that might be wrong
+                        continue
+            
+            if key_exchanges:
+                # Take the most meaningful exchanges
+                meaningful_exchanges = key_exchanges[-6:]  # Last 6 meaningful statements
+                session_summary = f"Session {session_num}: " + " | ".join(meaningful_exchanges)
+                context_parts.append(session_summary)
+    
+    if context_parts:
+        return f"""
+ACTUAL CONVERSATION HISTORY:
+{chr(10).join(context_parts)}
+
+IMPORTANT: Only reference what the user actually said above. Do NOT make up details about hobbies, goals, or activities they never mentioned. If you're not sure about something from previous conversations, ask them to remind you rather than guessing."""
+    
+    return ""
+
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
     print(f"🔍 WEBSOCKET DEBUG: Incoming connection from {request.remote}")
@@ -221,21 +259,22 @@ async def twilio_handler(twilio_ws):
                 if caller_data['context']['recent_sessions']:
                     print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
                     
-                    # Format context for AI system prompt
-                    context_summary = format_context_for_va(caller_context, caller_data['caller'])
+                    # Format ACTUAL conversation content instead of generic summaries
+                    actual_context = format_actual_conversation_context(caller_data['context']['recent_sessions'])
                     
-                    # Update AI prompt with conversation history
-                    ai_prompt = f"""{VOICE_AGENT_PERSONALITY}
+                    if actual_context:
+                        # Update AI prompt with REAL conversation history
+                        ai_prompt = f"""{VOICE_AGENT_PERSONALITY}
 
-CALLER CONTEXT:
-{context_summary}
+{actual_context}
 
-Remember this caller and refer to previous conversations naturally when relevant. Ask follow-up questions about things they've mentioned before."""
+Remember: Only refer to what this caller actually said in previous conversations. If you're unsure about details, ask them to remind you instead of guessing."""
+                        
+                        print(f"🧠 AI prompt enhanced with ACTUAL conversation content")
+                        print(f"📝 Context preview: {actual_context[:200]}...")
                     
-                    print(f"🧠 AI prompt enhanced with caller context")
-                
-            except Exception as e:
-                print(f"❌ Database error: {e}")
+                except Exception as e:
+                    print(f"❌ Database error: {e}")
 
         # NOW set up Deepgram with the complete AI prompt
         async with sts_connect() as sts_ws:
@@ -280,7 +319,7 @@ Remember this caller and refer to previous conversations naturally when relevant
             }
 
             await sts_ws.send(json.dumps(config_message))
-            print("⚙️ Configuration sent to Deepgram with caller context")
+            print("⚙️ Configuration sent to Deepgram with actual caller context")
 
             async def sts_sender():
                 """Send audio from Twilio to Deepgram"""
@@ -452,7 +491,7 @@ def main():
         
         print(f"🌟 Server running on 0.0.0.0:{port}")
         print("🎯 Server is ready to accept connections")
-        print("🧠 AI memory properly integrated - no duplicate settings!")
+        print("💬 AI now uses ACTUAL conversation content - no more hallucinations!")
         
         # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
