@@ -95,21 +95,34 @@ def format_actual_conversation_context(recent_sessions):
         session_num = session_data.get('session_number', 'Unknown')
         transcript = session_data.get('full_transcript', [])
 
-        # 🔧 NORMALISE: make sure every item is a dict with 'content' and 'speaker'
+        # 🔧 STEP 1: if transcript is a JSON string, decode it first
+        if isinstance(transcript, str):
+            try:
+                decoded = json.loads(transcript)
+                # Some schemas store {"messages": [...]}
+                if isinstance(decoded, dict) and "messages" in decoded:
+                    transcript = decoded["messages"]
+                else:
+                    transcript = decoded
+                print(f"🔍 DEBUG: Decoded JSON transcript for session {session_num}, type={type(transcript)}")
+            except json.JSONDecodeError:
+                # Fall back: treat whole thing as one user message
+                print(f"⚠️ WARNING: Could not JSON-decode transcript for session {session_num}, using raw string")
+                transcript = [{"content": transcript, "speaker": "user"}]
+
+        # 🔧 STEP 2: normalize into list[dict]
         normalized = []
         for item in transcript:
             if isinstance(item, dict):
                 normalized.append(item)
             else:
-                # If DB stored plain text, wrap it
                 normalized.append({
                     "content": str(item),
-                    # Best guess if not stored – adjust if your DB has this info elsewhere
                     "speaker": "user"
                 })
         transcript = normalized
         
-        print(f"🔍 DEBUG: Session {session_num} has {len(transcript) if transcript else 0} messages")
+        print(f"🔍 DEBUG: Session {session_num} has {len(transcript) if transcript else 0} messages after normalization")
         
         if transcript:
             key_exchanges = []
@@ -154,6 +167,7 @@ IMPORTANT: Only reference what the user actually said above. Do NOT make up deta
     
     print(f"🔍 DEBUG: No meaningful context found")
     return ""
+
 
 async def bulk_cleanup_handler(request):
     """HTTP endpoint for bulk cleanup operations"""
