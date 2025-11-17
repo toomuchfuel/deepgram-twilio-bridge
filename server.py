@@ -79,6 +79,9 @@ async def voice_webhook_handler(request):
 
 async def websocket_handler(request):
     """Handle WebSocket connections from Twilio"""
+    print(f"🔍 WEBSOCKET DEBUG: Incoming connection from {request.remote}")
+    print(f"🔍 Headers: {dict(request.headers)}")
+    print(f"🔍 Query params: {dict(request.query)}")
     # Extract caller info from query parameters (sent by voice webhook)
     caller_phone = request.query.get('From', 'unknown')
     call_sid = request.query.get('CallSid', 'unknown')
