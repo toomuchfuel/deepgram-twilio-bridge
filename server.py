@@ -176,24 +176,36 @@ async def bulk_cleanup_handler(request):
         if action == 'delete_old_sessions':
             # Delete sessions older than X days using correct schema
             async with db.pool.acquire() as conn:
-                # First delete messages from old sessions
-                result1 = await conn.fetchval(f'''
+                # First count what we'll delete
+                message_count = await conn.fetchval(f'''
+                    SELECT COUNT(*) FROM messages 
+                    WHERE session_id IN (
+                        SELECT session_id FROM sessions 
+                        WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                    )
+                ''')
+                
+                session_count = await conn.fetchval(f'''
+                    SELECT COUNT(*) FROM sessions 
+                    WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                ''')
+                
+                # Then delete messages from old sessions
+                await conn.execute(f'''
                     DELETE FROM messages 
                     WHERE session_id IN (
                         SELECT session_id FROM sessions 
                         WHERE created_at < NOW() - INTERVAL '{days_old} days'
                     )
-                    RETURNING COUNT(*)
                 ''')
                 
                 # Then delete old sessions
-                result2 = await conn.fetchval(f'''
+                await conn.execute(f'''
                     DELETE FROM sessions 
                     WHERE created_at < NOW() - INTERVAL '{days_old} days'
-                    RETURNING COUNT(*)
                 ''')
                 
-            return web.Response(text=f"Deleted old data: {result1 or 0} messages, {result2 or 0} sessions (older than {days_old} days)")
+            return web.Response(text=f"Deleted old data: {message_count} messages, {session_count} sessions (older than {days_old} days)")
             
         elif action == 'delete_caller_data' and caller_phone:
             # Delete all data for specific caller using actual schema
@@ -213,36 +225,44 @@ async def bulk_cleanup_handler(request):
                     print(f"🔍 DEBUG: Session {session_id_str[:8]}... created {session['created_at']}")
                 
                 if sessions_to_delete:
+                    # Count messages before deletion
+                    message_count = await conn.fetchval('''
+                        SELECT COUNT(*) FROM messages 
+                        WHERE session_id IN (
+                            SELECT session_id FROM sessions 
+                            WHERE caller_phone = $1
+                        )
+                    ''', caller_phone)
+                    
                     # Delete messages for this caller's sessions
-                    result1 = await conn.fetchval('''
+                    await conn.execute('''
                         DELETE FROM messages 
                         WHERE session_id IN (
                             SELECT session_id FROM sessions 
                             WHERE caller_phone = $1
                         )
-                        RETURNING COUNT(*)
                     ''', caller_phone)
                     
-                    # Then delete sessions for this caller  
-                    result2 = await conn.fetchval('''
+                    # Delete sessions for this caller  
+                    await conn.execute('''
                         DELETE FROM sessions 
                         WHERE caller_phone = $1
-                        RETURNING COUNT(*)
                     ''', caller_phone)
                     
-                    print(f"🔍 DEBUG: Deleted {result1 or 0} messages, {result2 or 0} sessions")
+                    result1 = message_count
+                    result2 = len(sessions_to_delete)
+                    
+                    print(f"🔍 DEBUG: Deleted {result1} messages, {result2} sessions")
                 else:
                     result1 = result2 = 0
                     print(f"🔍 DEBUG: No sessions found for {caller_phone}")
                 
                 # Finally delete from callers table if it exists
                 try:
-                    result3 = await conn.fetchval('''
-                        DELETE FROM callers 
-                        WHERE phone_number = $1 
-                        RETURNING COUNT(*)
-                    ''', caller_phone)
-                    print(f"🔍 DEBUG: Deleted {result3 or 0} caller records")
+                    caller_count = await conn.fetchval('SELECT COUNT(*) FROM callers WHERE phone_number = $1', caller_phone)
+                    await conn.execute('DELETE FROM callers WHERE phone_number = $1', caller_phone)
+                    result3 = caller_count
+                    print(f"🔍 DEBUG: Deleted {result3} caller records")
                 except Exception as e:
                     print(f"🔍 DEBUG: Callers table error (probably doesn't exist): {e}")
                     result3 = 0
