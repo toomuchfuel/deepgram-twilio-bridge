@@ -5,6 +5,7 @@ import sys
 import websockets
 import os
 import signal
+import time
 from aiohttp import web
 from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE
 from database import LogosDatabase, format_context_for_va
@@ -60,15 +61,15 @@ async def voice_webhook_handler(request):
         print(f"🔗 Connecting to WebSocket: {websocket_url}")
         
         # Return EXACT same TwiML format as working version
-        twiml_response = '''<?xml version="1.0" encoding="UTF-8"?>
+        twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="wss://voice-bridge-backend-production.up.railway.app/twilio">
-            <Parameter name="caller" value="{}"/>
-            <Parameter name="callsid" value="{}"/>
+            <Parameter name="caller" value="{caller_phone}"/>
+            <Parameter name="callsid" value="{call_sid}"/>
         </Stream>
     </Connect>
-</Response>'''.format(caller_phone, call_sid)
+</Response>'''
         
         return web.Response(text=twiml_response, content_type='application/xml')
     
@@ -120,36 +121,10 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
     session_id = None
     caller_context = None
 
-    # Load caller context from database at start if we have phone number
-    if db and caller_phone and caller_phone != 'unknown':
-        try:
-            caller_data = await db.get_or_create_caller(caller_phone, call_sid or "websocket-call")
-            session_id = caller_data['session_id']
-            caller_context = caller_data['context']
-            
-            print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
-            if caller_data['context']['recent_sessions']:
-                print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
-                
-                # Format context for AI system prompt
-                context_summary = format_context_for_va(caller_context, caller_data['caller'])
-                print(f"🧠 Context summary prepared for AI")
-            else:
-                context_summary = ""
-        except Exception as e:
-            print(f"❌ Database error: {e}")
-            context_summary = ""
-    else:
-        print(f"⚠️ No caller context loaded (phone: {caller_phone})")
-        context_summary = ""
-
     try:
         async with sts_connect() as sts_ws:
-            # Build AI system prompt with caller context
+            # We'll build the AI prompt after we get caller info from Twilio parameters
             ai_prompt = VOICE_AGENT_PERSONALITY
-            if context_summary:
-                ai_prompt += f"\n\nContext from previous conversations:\n{context_summary}"
-                print(f"🎯 AI prompt enhanced with caller context")
             
             # Send configuration to Deepgram
             config_message = {
@@ -179,7 +154,7 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                             "model": LLM_MODEL,
                             "temperature": LLM_TEMPERATURE
                         },
-                        "prompt": ai_prompt  # Now includes caller context!
+                        "prompt": ai_prompt
                     },
                     "speak": {
                         "provider": {
@@ -192,7 +167,7 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
             }
 
             await sts_ws.send(json.dumps(config_message))
-            print("⚙️ Configuration sent to Deepgram with caller context")
+            print("⚙️ Configuration sent to Deepgram")
 
             async def sts_sender():
                 """Send audio from Twilio to Deepgram"""
@@ -263,6 +238,7 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                 print("📱 twilio_receiver started")
                 BUFFER_SIZE = 20 * 160  # Buffer 20 messages (0.4 seconds)
                 inbuffer = bytearray(b"")
+                nonlocal session_id  # Allow modification of session_id
                 
                 try:
                     async for msg in twilio_ws:
@@ -274,31 +250,35 @@ async def twilio_handler(twilio_ws, caller_phone=None, call_sid=None):
                                 data = json.loads(msg.data)
                                 
                                 if data["event"] == "start":
-    print("🚀 Received Twilio start event")
-    start = data["start"]
-    streamsid = start["streamSid"]
-    actual_call_sid = start["callSid"]
-    
-    # Extract caller info from parameters (sent via TwiML)
-    custom_params = start.get("customParameters", {})
-    if custom_params:
-        caller_phone = custom_params.get("caller", "unknown")
-        call_sid = custom_params.get("callsid", actual_call_sid)
-        print(f"📱 Updated caller info from parameters: {caller_phone}")
-        
-        # Now load database context with real phone number
-        if db and caller_phone != 'unknown':
-            try:
-                caller_data = await db.get_or_create_caller(caller_phone, call_sid)
-                session_id = caller_data['session_id']
-                print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
-            except Exception as e:
-                print(f"❌ Database error: {e}")
-    
-    print(f"🔗 Stream ID: {streamsid}")
-    print(f"☎️ Actual Call SID: {actual_call_sid}")
-    
-    streamsid_queue.put_nowait(streamsid)
+                                    print("🚀 Received Twilio start event")
+                                    start = data["start"]
+                                    streamsid = start["streamSid"]
+                                    actual_call_sid = start["callSid"]
+                                    
+                                    # Extract caller info from parameters (sent via TwiML)
+                                    custom_params = start.get("customParameters", {})
+                                    if custom_params:
+                                        caller_phone = custom_params.get("caller", "unknown")
+                                        call_sid = custom_params.get("callsid", actual_call_sid)
+                                        print(f"📱 Updated caller info from parameters: {caller_phone}")
+                                        
+                                        # Now load database context with real phone number
+                                        if db and caller_phone != 'unknown':
+                                            try:
+                                                caller_data = await db.get_or_create_caller(caller_phone, call_sid)
+                                                session_id = caller_data['session_id']
+                                                print(f"💾 Loaded caller context - Session {caller_data['session_number']}")
+                                                if caller_data['context']['recent_sessions']:
+                                                    print(f"📚 Found {len(caller_data['context']['recent_sessions'])} previous sessions")
+                                            except Exception as e:
+                                                print(f"❌ Database error: {e}")
+                                    else:
+                                        print("⚠️ No custom parameters received from TwiML")
+                                    
+                                    print(f"🔗 Stream ID: {streamsid}")
+                                    print(f"☎️ Actual Call SID: {actual_call_sid}")
+                                    
+                                    streamsid_queue.put_nowait(streamsid)
                                     
                                 elif data["event"] == "connected":
                                     print("✅ Twilio connected")
@@ -407,7 +387,7 @@ async def create_app():
     # Routes
     app.router.add_get('/', root_handler)
     app.router.add_get('/health', health_check)
-    app.router.add_post('/webhook/voice', voice_webhook_handler)  # NEW: Twilio voice webhook
+    app.router.add_post('/webhook/voice', voice_webhook_handler)  # Twilio voice webhook
     app.router.add_get('/twilio', websocket_handler)  # WebSocket endpoint
     
     return app
@@ -444,11 +424,7 @@ def main():
         
         print(f"🌟 Server running on 0.0.0.0:{port}")
         print("🎯 Server is ready to accept connections")
-        print("📋 SETUP INSTRUCTIONS:")
-        print(f"   1. In Twilio Console, set your phone number webhook to:")
-        print(f"      https://your-app-name.railway.app/webhook/voice")
-        print(f"   2. Set HTTP method to POST")
-        print(f"   3. Remove any TwiML Bin configuration")
+        print("📋 Now change back to webhook URL in Twilio Console")
         
         # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
