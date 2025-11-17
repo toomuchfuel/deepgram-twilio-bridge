@@ -152,59 +152,78 @@ async def bulk_cleanup_handler(request):
         days_old = int(params.get('days', 7))
         
         if action == 'delete_old_sessions':
-            # Delete sessions older than X days
-            query = '''
-                DELETE FROM messages 
-                WHERE session_id IN (
-                    SELECT session_id FROM sessions 
-                    WHERE created_at < NOW() - INTERVAL '%s days'
-                )
-            '''
+            # Delete sessions older than X days using correct schema
             async with db.pool.acquire() as conn:
-                result1 = await conn.execute(query, days_old)
+                # First delete messages from old sessions
+                result1 = await conn.execute('''
+                    DELETE FROM messages 
+                    WHERE session_id IN (
+                        SELECT session_id FROM sessions 
+                        WHERE created_at < NOW() - INTERVAL $1
+                    )
+                ''', f'{days_old} days')
                 
-                query2 = '''
+                # Then delete old sessions
+                result2 = await conn.execute('''
                     DELETE FROM sessions 
-                    WHERE created_at < NOW() - INTERVAL '%s days'
-                '''
-                result2 = await conn.execute(query2, days_old)
+                    WHERE created_at < NOW() - INTERVAL $1
+                ''', f'{days_old} days')
                 
             return web.Response(text=f"Deleted old sessions and messages: {result1} messages, {result2} sessions")
             
         elif action == 'delete_caller_data' and caller_phone:
-            # Delete all data for specific caller
+            # Delete all data for specific caller using actual schema
             async with db.pool.acquire() as conn:
-                # First delete messages
+                # First delete messages for this caller's sessions
                 result1 = await conn.execute('''
                     DELETE FROM messages 
                     WHERE session_id IN (
-                        SELECT s.session_id FROM sessions s
-                        JOIN callers c ON s.caller_id = c.caller_id
-                        WHERE c.phone_number = $1
+                        SELECT session_id FROM sessions 
+                        WHERE caller_phone = $1
                     )
                 ''', caller_phone)
                 
-                # Then delete sessions
+                # Then delete sessions for this caller
                 result2 = await conn.execute('''
                     DELETE FROM sessions 
-                    WHERE caller_id IN (
-                        SELECT caller_id FROM callers WHERE phone_number = $1
-                    )
+                    WHERE caller_phone = $1
                 ''', caller_phone)
                 
-                # Finally delete caller
-                result3 = await conn.execute('DELETE FROM callers WHERE phone_number = $1', caller_phone)
+                # Finally delete from callers table if it exists
+                try:
+                    result3 = await conn.execute('DELETE FROM callers WHERE phone_number = $1', caller_phone)
+                except:
+                    result3 = "N/A (callers table structure unknown)"
                 
             return web.Response(text=f"Deleted caller {caller_phone}: {result1} messages, {result2} sessions, {result3} caller records")
             
         elif action == 'count_records':
-            # Count current records
+            # Count current records using actual schema
             async with db.pool.acquire() as conn:
-                callers_count = await conn.fetchval('SELECT COUNT(*) FROM callers')
                 sessions_count = await conn.fetchval('SELECT COUNT(*) FROM sessions') 
                 messages_count = await conn.fetchval('SELECT COUNT(*) FROM messages')
                 
-            return web.Response(text=f"Records: {callers_count} callers, {sessions_count} sessions, {messages_count} messages")
+                # Count unique callers from sessions table
+                unique_callers = await conn.fetchval('SELECT COUNT(DISTINCT caller_phone) FROM sessions')
+                
+                # Show sessions per caller
+                caller_breakdown = await conn.fetch('''
+                    SELECT caller_phone, COUNT(*) as session_count 
+                    FROM sessions 
+                    GROUP BY caller_phone 
+                    ORDER BY session_count DESC
+                ''')
+                
+            breakdown_text = "\n".join([f"  {row['caller_phone']}: {row['session_count']} sessions" for row in caller_breakdown])
+            
+            return web.Response(text=f'''Database Records:
+- {unique_callers} unique callers
+- {sessions_count} total sessions  
+- {messages_count} total messages
+
+Breakdown by caller:
+{breakdown_text}
+            '''.strip())
             
         else:
             return web.Response(text='''
