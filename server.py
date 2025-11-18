@@ -820,14 +820,7 @@ async def websocket_handler(request):
                                     if call_sid in active_sessions:
                                         active_sessions[call_sid]['status'] = 'active'
                                     
-                                    # Broadcast to dashboard
-                                    await broadcast_to_dashboards({
-                                        'type': 'call_started',
-                                        'call_sid': call_sid,
-                                        'caller_phone': caller_phone,
-                                        'timestamp': time.time()
-                                    })
-                                
+                                                                    
                                 await streamsid_queue.put(streamsid)
                                 print(f"📨 StreamSid queued: {streamsid}")
                                 
@@ -1000,7 +993,7 @@ Remember: Only refer to what this caller actually said in previous conversations
                                             await db.add_message(session_id, db_role, content, decoded)
                                             print(f"💬 Stored message: {db_role} - {content[:50]}...")
                                             
-                                            except Exception as e:
+                                        except Exception as e:
                                             print(f"Error storing message: {e}")
                                         
                                         # Broadcast to dashboard (outside database transaction)
