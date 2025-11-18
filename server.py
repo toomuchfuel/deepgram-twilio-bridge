@@ -81,6 +81,7 @@ async def voice_webhook_handler(request):
             'type': 'call_started',
             'call_sid': call_sid,
             'caller_phone': caller_phone,
+            'session_id': str(session_id) if session_id else None,  # <-- Add this if session_id exists
             'timestamp': time.time()
         })
         
