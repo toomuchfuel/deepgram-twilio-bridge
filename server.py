@@ -1003,12 +1003,12 @@ Remember: Only refer to what this caller actually said in previous conversations
                                         try:
                                             await broadcast_to_dashboards({
                                                 'type': 'transcript_update',
-                                                'session_id': session_id,
+                                                'session_id': str(session_id),      # <-- Convert UUID to string
                                                 'call_sid': call_sid,
                                                 'role': db_role,
                                                 'content': content,
                                                 'timestamp': time.time()
-                                            })
+                                        })
                                         except Exception as e:
                                             print(f"Error broadcasting to dashboard: {e}")
                                             
