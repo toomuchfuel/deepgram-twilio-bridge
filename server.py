@@ -15,6 +15,7 @@ from aiohttp_cors import setup as cors_setup, ResourceOptions
 shutdown_event = asyncio.Event()
 db = None  # Database instance
 active_sessions = {}  # Store session data: {call_sid: session_data}
+inactive_clients = []  # Store ended calls for the dashboard
 dashboard_connections = set()  # Track dashboard WebSocket connections
 human_guidance_queue = {}  # Store guidance from human operators: {session_id: guidance_text}
 
@@ -213,14 +214,11 @@ async def dashboard_websocket_handler(request):
                 'sessions': list(active_sessions.keys())
             }))
         
-        # Send mock inactive clients on connection
-        mock_inactive_clients = [
-            {"id": "I582298", "name": "Karen R.", "flag": "Distressed", "calls": 5, "avg": 31, "last": "17m", "progress": 24, "health": "High Risk"},
-            {"id": "P495337", "name": "Joshua B.", "flag": "Casual", "calls": 9, "avg": 41, "last": "5m", "progress": 57, "health": "Stable"},
-            {"id": "S224021", "name": "Priya K.", "flag": "Casual", "calls": 5, "avg": 40, "last": "38m", "progress": 64, "health": "Stable"},
-            {"id": "A410956", "name": "Emma T.", "flag": "Distressed", "calls": 8, "avg": 24, "last": "27d", "progress": 27, "health": "High Risk"},
-            {"id": "P661408", "name": "Ravi D.", "flag": "Intense", "calls": 10, "avg": 44, "last": "22d", "progress": 53, "health": "Caution"},
-        ]
+        # Send current inactive clients on connection
+        await ws.send_str(json.dumps({
+            'type': 'inactive_clients',
+            'clients': inactive_clients
+        }))
         
         await ws.send_str(json.dumps({
             'type': 'inactive_clients',
@@ -382,7 +380,7 @@ async def dashboard_handler(request):
           </div>
           <div class="btns">
             <button class="ghost-btn" id="takeOverBtn">Take Over</button>
-            <button class="ghost-btn">Session History</button>
+            <button class="ghost-btn" id="sessionHistoryBtn">Session History</button>
           </div>
         </div>
         <div class="stats">
@@ -646,7 +644,23 @@ Examples:
       
       document.getElementById('guidanceText').value = '';
     }
-    
+    function openSessionHistory() {
+      const nameEl = document.getElementById('liveName');
+      if (!nameEl) {
+        alert('No client selected');
+        return;
+      }
+      const phone = nameEl.textContent.trim();
+      if (!phone) {
+        alert('No client selected');
+        return;
+      }
+      const url = `/cleanup?action=list_sessions&phone=${encodeURIComponent(phone)}`;
+      window.open(url, '_blank');
+    }
+     
+      // Update call durations every second
+
     // Update call durations every second
     setInterval(() => {
       Object.keys(callStartTime).forEach(callSid => {
@@ -662,6 +676,7 @@ Examples:
     
     // Event listeners
     document.getElementById('sendGuidanceBtn').addEventListener('click', sendGuidance);
+    document.getElementById('sessionHistoryBtn').addEventListener('click', openSessionHistory);
     
     // Initialize dashboard
     connectWebSocket();
@@ -841,15 +856,44 @@ async def websocket_handler(request):
                                     await audio_queue.put(bytes(inbuffer))
                                 shutdown_event.set()
                                 
-                                # Clean up active sessions
-                                if call_sid and call_sid in active_sessions:
-                                    del active_sessions[call_sid]
-                                
-                                # Broadcast call end to dashboard
-                                await broadcast_to_dashboards({
-                                    'type': 'call_ended',
-                                    'call_sid': call_sid
-                                })
+                                                                 # Move call from active to inactive list and notify dashboards
+                                 if call_sid:
+                                     # Get session info if we have it
+                                     session_info = active_sessions.get(call_sid, {})
+                                     start_ts = session_info.get('timestamp')
+                                     duration_sec = time.time() - start_ts if start_ts else 0
+                                     
+                                     # Derive phone / display name
+                                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
+                                     
+                                     # Build a simple inactive client summary
+                                     inactive_clients.append({
+                                         'id': call_sid,
+                                         'name': phone,
+                                         'flag': 'Stable',
+                                         'calls': 1,
+                                         'avg': int(duration_sec // 60) if duration_sec else 0,
+                                         'last': 'Just now',
+                                         'progress': 0,
+                                         'health': 'Stable',
+                                     })
+                                     
+                                     # Remove from active sessions if present
+                                     if call_sid in active_sessions:
+                                         del active_sessions[call_sid]
+                                     
+                                     # Notify dashboards that call ended
+                                     await broadcast_to_dashboards({
+                                         'type': 'call_ended',
+                                         'call_sid': call_sid
+                                     })
+                                     
+                                     # Send updated inactive clients list
+                                     await broadcast_to_dashboards({
+                                         'type': 'inactive_clients',
+                                         'clients': inactive_clients
+                                     })
+
                                 
                         except json.JSONDecodeError as e:
                             print(f"Failed to decode JSON: {e}")
