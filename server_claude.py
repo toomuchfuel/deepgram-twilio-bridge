@@ -846,13 +846,24 @@ async def websocket_handler(request):
                                 
                                 print(f"📞 Caller identified as: {caller_phone}")
                                 
-                                # FIXED: Skip database session creation if method doesn't exist
-                                session_id = f"session_{call_sid}"  # Use simple session ID
-                                print(f"📝 Session ID created: {session_id}")
-                                
-                                # FIXED: Skip context loading for now to avoid database errors
-                                context = ""
-                                print("🧠 No context loaded (database session creation skipped)")
+                                # Initialize database session if available
+                                if db:
+                                    try:
+                                        session_id = await db.create_session(caller_phone)
+                                        print(f"📝 Database session created: {session_id}")
+                                        
+                                        # Get conversation context
+                                        recent_sessions = await db.get_recent_sessions(caller_phone, exclude_current=session_id, limit=5)
+                                        context = format_actual_conversation_context(recent_sessions)
+                                        
+                                        if context:
+                                            print(f"🧠 Context loaded: {len(context)} characters")
+                                        else:
+                                            print("🧠 No previous context found")
+                                            
+                                    except Exception as e:
+                                        print(f"Database session creation failed: {e}")
+                                        session_id = None
                                 
                                 # Broadcast call start to dashboard
                                 await broadcast_to_dashboards({
@@ -905,30 +916,28 @@ async def websocket_handler(request):
         sts_ws = await sts_connect()
         print("🔗 Connected to Deepgram Voice Agent")
         
-        # FIXED: Simplified Deepgram configuration
-        base_instructions = VOICE_AGENT_PERSONALITY
-        
-        # Check for human guidance for this session
-        if session_id and session_id in human_guidance_queue:
-            guidance = human_guidance_queue[session_id]
-            base_instructions += f"\n\nHUMAN GUIDANCE: {guidance['guidance']}"
-            print(f"🧠 Including human guidance: {guidance['guidance']}")
-            # Remove used guidance
-            del human_guidance_queue[session_id]
-        
+        # Include human guidance in Deepgram configuration if available
         deepgram_config = {
             "type": "SettingsConfiguration",
             "agent": {
                 "think": {
-                    "provider": {"type": "open_ai"},
+                    "provider": {"type": VOICE_MODEL},
                     "model": LLM_MODEL,
-                    "instructions": base_instructions
+                    "instructions": VOICE_AGENT_PERSONALITY
                 },
                 "speak": {
                     "model": VOICE_MODEL
                 }
             }
         }
+        
+        # Check for human guidance for this session
+        if session_id in human_guidance_queue:
+            guidance = human_guidance_queue[session_id]
+            deepgram_config["agent"]["think"]["instructions"] += f"\n\nHUMAN GUIDANCE: {guidance['guidance']}"
+            print(f"🧠 Including human guidance: {guidance['guidance']}")
+            # Remove used guidance
+            del human_guidance_queue[session_id]
         
         await sts_ws.send(json.dumps(deepgram_config))
         print("⚙️ Deepgram configuration sent")
@@ -963,15 +972,16 @@ async def websocket_handler(request):
                         try:
                             decoded = json.loads(message)
                             
-                            # FIXED: Skip database storage for now, just broadcast to dashboard
-                            if decoded.get('type') == 'ConversationText':
+                            # Store conversation messages in database and broadcast to dashboard
+                            if decoded.get('type') == 'ConversationText' and session_id and db:
                                 role = decoded.get('role')
                                 content = decoded.get('content')
                                 if role and content:
                                     try:
                                         # Map Deepgram roles to database-compatible roles
                                         db_role = 'ai' if role == 'assistant' else role
-                                        print(f"💬 Conversation: {db_role} - {content[:50]}...")
+                                        await db.add_message(session_id, db_role, content, decoded)
+                                        print(f"💬 Stored message: {db_role} - {content[:50]}...")
                                         
                                         # Broadcast transcript update to dashboard
                                         await broadcast_to_dashboards({
@@ -984,7 +994,7 @@ async def websocket_handler(request):
                                         })
                                         
                                     except Exception as e:
-                                        print(f"Error processing conversation: {e}")
+                                        print(f"Error storing message: {e}")
                             
                             if decoded['type'] == 'UserStartedSpeaking':
                                 # Handle barge-in

@@ -1,0 +1,1001 @@
+2025-11-17T08:06:31.761659886Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:33.680790342Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:33.680796459Z [err]      except Exception as e:
+2025-11-17T08:06:33.680802809Z [err]      ^^^^^^
+2025-11-17T08:06:33.680808921Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:34.588176068Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:34.588182100Z [err]      except Exception as e:
+2025-11-17T08:06:34.588188695Z [err]      ^^^^^^
+2025-11-17T08:06:34.588194454Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:35.619318835Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:35.619324983Z [err]      except Exception as e:
+2025-11-17T08:06:35.619331044Z [err]      ^^^^^^
+2025-11-17T08:06:35.619336703Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:36.021903335Z [inf]  🚀 Starting Twilio-Deepgram Bridge Server on port 5000
+2025-11-17T08:06:36.021910416Z [inf]  🔍 Health check endpoint: http://0.0.0.0:5000/health
+2025-11-17T08:06:36.021917688Z [inf]  📞 Voice webhook: http://0.0.0.0:5000/webhook/voice
+2025-11-17T08:06:36.021928927Z [inf]  🔌 WebSocket endpoint: ws://0.0.0.0:5000/twilio
+2025-11-17T08:06:36.021935484Z [inf]  ✅ DEEPGRAM_API_KEY found in environment
+2025-11-17T08:06:36.021942694Z [inf]  Database tables created successfully
+2025-11-17T08:06:36.021949523Z [inf]  Database connected successfully
+2025-11-17T08:06:36.021956497Z [inf]  🌟 Server running on 0.0.0.0:5000
+2025-11-17T08:06:36.021963004Z [inf]  🎯 Server is ready to accept connections
+2025-11-17T08:06:36.021969661Z [inf]  🧠 AI memory properly integrated - no duplicate settings!
+2025-11-17T08:06:36.865020065Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:36.865026637Z [err]      except Exception as e:
+2025-11-17T08:06:36.865033145Z [err]      ^^^^^^
+2025-11-17T08:06:36.865039852Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:39.160983743Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:39.160988534Z [err]      except Exception as e:
+2025-11-17T08:06:39.160994453Z [err]      ^^^^^^
+2025-11-17T08:06:39.160999113Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:40.336312631Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:40.336321760Z [err]      except Exception as e:
+2025-11-17T08:06:40.336328696Z [err]      ^^^^^^
+2025-11-17T08:06:40.336334379Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:42.090808018Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:42.090818462Z [err]      except Exception as e:
+2025-11-17T08:06:42.090825321Z [err]      ^^^^^^
+2025-11-17T08:06:42.090833938Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:43.304157628Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:43.304165391Z [err]      except Exception as e:
+2025-11-17T08:06:43.304173087Z [err]      ^^^^^^
+2025-11-17T08:06:43.304179241Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:44.402646093Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:44.402657258Z [err]      except Exception as e:
+2025-11-17T08:06:44.402663784Z [err]      ^^^^^^
+2025-11-17T08:06:44.402671965Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:46.327447831Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:46.327456891Z [err]      except Exception as e:
+2025-11-17T08:06:46.327463926Z [err]      ^^^^^^
+2025-11-17T08:06:46.327474372Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:47.422905526Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:47.422910852Z [err]      except Exception as e:
+2025-11-17T08:06:47.422915987Z [err]      ^^^^^^
+2025-11-17T08:06:47.422921244Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:48.706318146Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:48.706323771Z [err]      except Exception as e:
+2025-11-17T08:06:48.706328298Z [err]      ^^^^^^
+2025-11-17T08:06:48.706332883Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:50.429182618Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:50.429189467Z [err]      except Exception as e:
+2025-11-17T08:06:50.429194677Z [err]      ^^^^^^
+2025-11-17T08:06:50.429199124Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:51.472489764Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:51.472495974Z [err]      except Exception as e:
+2025-11-17T08:06:51.472500314Z [err]      ^^^^^^
+2025-11-17T08:06:51.472504287Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:52.803306283Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:52.803312582Z [err]      except Exception as e:
+2025-11-17T08:06:52.803317442Z [err]      ^^^^^^
+2025-11-17T08:06:52.803321774Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:54.000000000Z [inf]  Starting Container
+2025-11-17T08:06:54.507553869Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:54.507560004Z [err]      except Exception as e:
+2025-11-17T08:06:54.507566278Z [err]      ^^^^^^
+2025-11-17T08:06:54.507572352Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:55.151685595Z [inf]  🚀 Starting Twilio-Deepgram Bridge Server on port 5000
+2025-11-17T08:06:55.151694987Z [inf]  🔍 Health check endpoint: http://0.0.0.0:5000/health
+2025-11-17T08:06:55.151701435Z [inf]  📞 Voice webhook: http://0.0.0.0:5000/webhook/voice
+2025-11-17T08:06:55.151706525Z [inf]  🔌 WebSocket endpoint: ws://0.0.0.0:5000/twilio
+2025-11-17T08:06:55.151710852Z [inf]  ✅ DEEPGRAM_API_KEY found in environment
+2025-11-17T08:06:55.151717021Z [inf]  Database tables created successfully
+2025-11-17T08:06:55.151721871Z [inf]  Database connected successfully
+2025-11-17T08:06:55.151726622Z [inf]  🌟 Server running on 0.0.0.0:5000
+2025-11-17T08:06:55.151731449Z [inf]  🎯 Server is ready to accept connections
+2025-11-17T08:06:55.151736405Z [inf]  🧠 AI memory properly integrated - no duplicate settings!
+2025-11-17T08:06:55.151741041Z [inf]  🌐 Request: GET /health from 100.64.0.2
+2025-11-17T08:06:55.151745619Z [inf]  ✅ Response: GET /health -> 200
+2025-11-17T08:06:56.024082479Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:56.024094119Z [err]      except Exception as e:
+2025-11-17T08:06:56.024101256Z [err]      ^^^^^^
+2025-11-17T08:06:56.024107380Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:57.719090478Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:57.719109318Z [err]      except Exception as e:
+2025-11-17T08:06:57.719124703Z [err]      ^^^^^^
+2025-11-17T08:06:57.719135410Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:58.847918771Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:58.847924896Z [err]      except Exception as e:
+2025-11-17T08:06:58.847930529Z [err]      ^^^^^^
+2025-11-17T08:06:58.847936046Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:06:59.983294993Z [err]    File "/app/server.py", line 276
+2025-11-17T08:06:59.983303910Z [err]      except Exception as e:
+2025-11-17T08:06:59.983312511Z [err]      ^^^^^^
+2025-11-17T08:06:59.983319194Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:00.000000000Z [inf]  Stopping Container
+2025-11-17T08:07:01.318859205Z [err]  2025-11-17 08:07:00.043 UTC [5409] LOG:  could not receive data from client: Connection reset by peer
+2025-11-17T08:07:01.766421536Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:01.766426946Z [err]      except Exception as e:
+2025-11-17T08:07:01.766432166Z [err]      ^^^^^^
+2025-11-17T08:07:01.766437205Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:02.837281317Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:02.837290977Z [err]      except Exception as e:
+2025-11-17T08:07:02.837297802Z [err]      ^^^^^^
+2025-11-17T08:07:02.837305630Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:05.042517720Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:05.042524401Z [err]      except Exception as e:
+2025-11-17T08:07:05.042530747Z [err]      ^^^^^^
+2025-11-17T08:07:05.042537586Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:06.053265780Z [inf]  Ignoring SIGTERM to keep server running (Railway may be testing)
+2025-11-17T08:07:06.053293323Z [inf]  Received signal 15 from Railway
+2025-11-17T08:07:06.053299902Z [inf]  Railway sent SIGTERM - but health checks are passing!
+2025-11-17T08:07:06.215825681Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:06.215831837Z [err]      except Exception as e:
+2025-11-17T08:07:06.215839429Z [err]      ^^^^^^
+2025-11-17T08:07:06.215845599Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:07.317759499Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:07.317766373Z [err]      except Exception as e:
+2025-11-17T08:07:07.317773031Z [err]      ^^^^^^
+2025-11-17T08:07:07.317779401Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:08.550453216Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:08.550464757Z [err]      except Exception as e:
+2025-11-17T08:07:08.550472251Z [err]      ^^^^^^
+2025-11-17T08:07:08.550479688Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:10.273635130Z [err]      ^^^^^^
+2025-11-17T08:07:10.273644947Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:10.273909022Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:10.273917001Z [err]      except Exception as e:
+2025-11-17T08:07:11.505317956Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:11.505328617Z [err]      except Exception as e:
+2025-11-17T08:07:11.505334862Z [err]      ^^^^^^
+2025-11-17T08:07:11.505341863Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:13.537301994Z [err]      except Exception as e:
+2025-11-17T08:07:13.537316148Z [err]      ^^^^^^
+2025-11-17T08:07:13.537324587Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:13.537413142Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:14.454309455Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:14.454314965Z [err]      except Exception as e:
+2025-11-17T08:07:14.454319652Z [err]      ^^^^^^
+2025-11-17T08:07:14.454324525Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:16.357952535Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:16.357959122Z [err]      except Exception as e:
+2025-11-17T08:07:16.357965227Z [err]      ^^^^^^
+2025-11-17T08:07:16.357970530Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:17.521602373Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:17.521606409Z [err]      except Exception as e:
+2025-11-17T08:07:17.521611114Z [err]      ^^^^^^
+2025-11-17T08:07:17.521615580Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:18.637068877Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:18.637075732Z [err]      except Exception as e:
+2025-11-17T08:07:18.637081605Z [err]      ^^^^^^
+2025-11-17T08:07:18.637094417Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:20.385884947Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:20.385890548Z [err]      except Exception as e:
+2025-11-17T08:07:20.385896731Z [err]      ^^^^^^
+2025-11-17T08:07:20.385903262Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:21.636460441Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:21.636469557Z [err]      except Exception as e:
+2025-11-17T08:07:21.636476104Z [err]      ^^^^^^
+2025-11-17T08:07:21.636483196Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:22.732545306Z [err]      ^^^^^^
+2025-11-17T08:07:22.732558367Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:22.732578011Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:22.732585418Z [err]      except Exception as e:
+2025-11-17T08:07:23.889305751Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:23.889316058Z [err]      except Exception as e:
+2025-11-17T08:07:23.889322385Z [err]      ^^^^^^
+2025-11-17T08:07:23.889328369Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:25.848292892Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:25.848304718Z [err]      except Exception as e:
+2025-11-17T08:07:25.848312214Z [err]      ^^^^^^
+2025-11-17T08:07:25.848317484Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:26.866076805Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:26.866082765Z [err]      except Exception as e:
+2025-11-17T08:07:26.866093591Z [err]      ^^^^^^
+2025-11-17T08:07:26.866106845Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:28.026392836Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:28.026401669Z [err]      except Exception as e:
+2025-11-17T08:07:28.026407575Z [err]      ^^^^^^
+2025-11-17T08:07:28.026412598Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:29.282867432Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:29.282874212Z [err]      except Exception as e:
+2025-11-17T08:07:29.282880463Z [err]      ^^^^^^
+2025-11-17T08:07:29.282888784Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:30.905745053Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:30.905752226Z [err]      except Exception as e:
+2025-11-17T08:07:30.905759146Z [err]      ^^^^^^
+2025-11-17T08:07:30.905765580Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:32.181349451Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:32.181359326Z [err]      except Exception as e:
+2025-11-17T08:07:32.181366003Z [err]      ^^^^^^
+2025-11-17T08:07:32.181372274Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:33.956581285Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:33.956586602Z [err]      except Exception as e:
+2025-11-17T08:07:33.956591978Z [err]      ^^^^^^
+2025-11-17T08:07:33.956598142Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:34.993885467Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:34.993892183Z [err]      except Exception as e:
+2025-11-17T08:07:34.993896337Z [err]      ^^^^^^
+2025-11-17T08:07:34.993900167Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:35.154528522Z [inf]  🌐 Request: POST /webhook/voice from 100.64.0.3
+2025-11-17T08:07:35.154535749Z [inf]  🎯 Voice webhook: Call from +61412247247, CallSid: CA1c8b4d168ac80d41fcaf84ca9db3138c
+2025-11-17T08:07:35.154542277Z [inf]  🔗 Connecting to WebSocket: wss://voice-bridge-backend-production.up.railway.app/twilio
+2025-11-17T08:07:35.154548694Z [inf]  ✅ Response: POST /webhook/voice -> 200
+2025-11-17T08:07:35.154554975Z [inf]  🌐 Request: GET /twilio from 100.64.0.4
+2025-11-17T08:07:35.154561590Z [inf]  🔍 WEBSOCKET DEBUG: Incoming connection from 100.64.0.4
+2025-11-17T08:07:35.154567575Z [inf]  🔍 Headers: {'Host': 'voice-bridge-backend-production.up.railway.app', 'User-Agent': 'Twilio.TmeWs/1.0', 'Connection': 'Upgrade', 'Sec-WebSocket-Key': 'OHnporXFbzxwBTto3TGGCQ==', 'Sec-WebSocket-Version': '13', 'Upgrade': 'websocket', 'X-Forwarded-For': '44.203.171.195', 'X-Forwarded-Host': 'voice-bridge-backend-production.up.railway.app', 'X-Forwarded-Proto': 'https', 'X-Railway-Edge': 'railway/us-east4-eqdc4a', 'X-Railway-Request-Id': 'ElMY0OSiRsSE8L8zAax-fw', 'X-Real-Ip': '44.203.171.195', 'X-Request-Start': '1763366854246', 'X-Twilio-Signature': 'rXvPEkPetd5bm3+VAXLMlRWqRvM=', 'Accept-Encoding': 'gzip'}
+2025-11-17T08:07:35.154576169Z [inf]  🔍 Query params: {}
+2025-11-17T08:07:35.154582663Z [inf]  📞 WebSocket connection established on path: /twilio
+2025-11-17T08:07:35.154588732Z [inf]  📱 twilio_receiver started
+2025-11-17T08:07:35.154594640Z [inf]  ✅ Twilio connected
+2025-11-17T08:07:35.154601999Z [inf]  🚀 Received Twilio start event
+2025-11-17T08:07:35.154608918Z [inf]  📱 Updated caller info from parameters: +61412247247
+2025-11-17T08:07:35.154616005Z [inf]  🔗 Stream ID: MZ1344914ca5285a81737249aebfce9239
+2025-11-17T08:07:35.154621630Z [inf]  ☎️ Actual Call SID: CA1c8b4d168ac80d41fcaf84ca9db3138c
+2025-11-17T08:07:35.154626637Z [inf]  💾 Loaded caller context - Session 6
+2025-11-17T08:07:35.155170503Z [inf]  📚 Found 5 previous sessions
+2025-11-17T08:07:35.155185159Z [inf]  🧠 AI prompt enhanced with caller context
+2025-11-17T08:07:35.155194243Z [inf]  ⚙️ Configuration sent to Deepgram with caller context
+2025-11-17T08:07:35.155201910Z [inf]  🎤 sts_sender started
+2025-11-17T08:07:35.155207526Z [inf]  🔊 sts_receiver started
+2025-11-17T08:07:35.155216138Z [inf]  🌊 Got stream ID: MZ1344914ca5285a81737249aebfce9239
+2025-11-17T08:07:35.155225953Z [inf]  📨 Deepgram message: {"type":"Welcome","request_id":"70dca8e8-9fb8-412a-ad08-4ead2a9a16ac"}
+2025-11-17T08:07:35.155232787Z [inf]  📨 Deepgram message: {"type":"SettingsApplied"}
+2025-11-17T08:07:35.155240125Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T08:07:35.155248274Z [inf]  💬 Stored message: ai - Hello! How can I help you today?...
+2025-11-17T08:07:35.155270331Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T08:07:35.531397930Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:07:36.240874791Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:36.240880391Z [err]      except Exception as e:
+2025-11-17T08:07:36.240886238Z [err]      ^^^^^^
+2025-11-17T08:07:36.240894339Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:38.256263668Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:38.256268047Z [err]      except Exception as e:
+2025-11-17T08:07:38.256272303Z [err]      ^^^^^^
+2025-11-17T08:07:38.256276371Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:39.119579889Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:39.119585886Z [err]      except Exception as e:
+2025-11-17T08:07:39.119591335Z [err]      ^^^^^^
+2025-11-17T08:07:39.119596745Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:39.346731932Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:07:40.281730527Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:40.281736042Z [err]      except Exception as e:
+2025-11-17T08:07:40.281740756Z [err]      ^^^^^^
+2025-11-17T08:07:40.281745334Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:41.324142557Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Hi. Can you remember what we last spoke about?"}
+2025-11-17T08:07:41.329890661Z [inf]  💬 Stored message: user - Hi. Can you remember what we last spoke about?...
+2025-11-17T08:07:41.329895548Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Hi. Can you remember what we last spoke about?"}
+2025-11-17T08:07:42.134263040Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hey!"}
+2025-11-17T08:07:42.140205335Z [inf]  💬 Stored message: ai - Hey!...
+2025-11-17T08:07:42.140210844Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hey!"}
+2025-11-17T08:07:42.407674938Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:42.407681330Z [err]      except Exception as e:
+2025-11-17T08:07:42.407686336Z [err]      ^^^^^^
+2025-11-17T08:07:42.407692505Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:42.699838875Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Last time we chatted, we touched on a few different topics."}
+2025-11-17T08:07:42.700521369Z [inf]  💬 Stored message: ai - Last time we chatted, we touched on a few differen...
+2025-11-17T08:07:42.700531131Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Last time we chatted, we touched on a few different topics."}
+2025-11-17T08:07:43.641196362Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:43.641202115Z [err]      except Exception as e:
+2025-11-17T08:07:43.641207693Z [err]      ^^^^^^
+2025-11-17T08:07:43.641214126Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:44.799399318Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:44.799407967Z [err]      except Exception as e:
+2025-11-17T08:07:44.799414239Z [err]      ^^^^^^
+2025-11-17T08:07:44.799419898Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:45.649660622Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Do you want to dive back into anything specific?"}
+2025-11-17T08:07:45.649671751Z [inf]  💬 Stored message: ai - Do you want to dive back into anything specific?...
+2025-11-17T08:07:45.649677532Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Do you want to dive back into anything specific?"}
+2025-11-17T08:07:45.649683743Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:07:46.657666808Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:46.657672518Z [err]      except Exception as e:
+2025-11-17T08:07:46.657680880Z [err]      ^^^^^^
+2025-11-17T08:07:46.657686491Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:47.725185455Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:47.725194362Z [err]      except Exception as e:
+2025-11-17T08:07:47.725201368Z [err]      ^^^^^^
+2025-11-17T08:07:47.725209878Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:49.535885010Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:49.535892692Z [err]      except Exception as e:
+2025-11-17T08:07:49.535897482Z [err]      ^^^^^^
+2025-11-17T08:07:49.535901810Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:50.543575754Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:07:50.554732747Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:50.554740150Z [err]      except Exception as e:
+2025-11-17T08:07:50.554744812Z [err]      ^^^^^^
+2025-11-17T08:07:50.554749686Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:51.316136107Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"What topics were they?"}
+2025-11-17T08:07:51.321861297Z [inf]  💬 Stored message: user - What topics were they?...
+2025-11-17T08:07:51.321868051Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"What topics were they?"}
+2025-11-17T08:07:52.345527721Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"We talked about your recent projects, some personal interests, and a bit about your plans for the weekend."}
+2025-11-17T08:07:52.345532556Z [inf]  💬 Stored message: ai - We talked about your recent projects, some persona...
+2025-11-17T08:07:52.345537986Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"We talked about your recent projects, some personal interests, and a bit about your plans for the weekend."}
+2025-11-17T08:07:52.544981665Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:52.544987889Z [err]      except Exception as e:
+2025-11-17T08:07:52.544993595Z [err]      ^^^^^^
+2025-11-17T08:07:52.544999299Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:53.666998047Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:53.667005705Z [err]      except Exception as e:
+2025-11-17T08:07:53.667011274Z [err]      ^^^^^^
+2025-11-17T08:07:53.667017008Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:54.926700320Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:54.926710239Z [err]      except Exception as e:
+2025-11-17T08:07:54.926716871Z [err]      ^^^^^^
+2025-11-17T08:07:54.926725459Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:56.708826605Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:56.708832652Z [err]      except Exception as e:
+2025-11-17T08:07:56.708838487Z [err]      ^^^^^^
+2025-11-17T08:07:56.708844225Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:57.770626788Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:57.770632454Z [err]      except Exception as e:
+2025-11-17T08:07:57.770647057Z [err]      ^^^^^^
+2025-11-17T08:07:57.770653087Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:07:58.808566287Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Any of those you want to revisit?"}
+2025-11-17T08:07:58.808573605Z [inf]  💬 Stored message: ai - Any of those you want to revisit?...
+2025-11-17T08:07:58.808578424Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Any of those you want to revisit?"}
+2025-11-17T08:07:58.808583773Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:07:59.042726198Z [err]    File "/app/server.py", line 276
+2025-11-17T08:07:59.042730426Z [err]      except Exception as e:
+2025-11-17T08:07:59.042734911Z [err]      ^^^^^^
+2025-11-17T08:07:59.042739055Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:00.982661816Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:00.982669026Z [err]      except Exception as e:
+2025-11-17T08:08:00.982678005Z [err]      ^^^^^^
+2025-11-17T08:08:00.982684478Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:01.812208918Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:01.812214490Z [err]      except Exception as e:
+2025-11-17T08:08:01.812220283Z [err]      ^^^^^^
+2025-11-17T08:08:01.812226114Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:02.948006325Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:02.948010474Z [err]      except Exception as e:
+2025-11-17T08:08:02.948014726Z [err]      ^^^^^^
+2025-11-17T08:08:02.948018944Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:03.351954729Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:03.718559257Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"No."}
+2025-11-17T08:08:03.718563449Z [inf]  💬 Stored message: user - No....
+2025-11-17T08:08:03.718567277Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"No."}
+2025-11-17T08:08:04.355704354Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Alright!"}
+2025-11-17T08:08:04.355710723Z [inf]  💬 Stored message: ai - Alright!...
+2025-11-17T08:08:04.355716008Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Alright!"}
+2025-11-17T08:08:04.874537510Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:04.874542608Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:04.874552378Z [err]      except Exception as e:
+2025-11-17T08:08:04.874560313Z [err]      ^^^^^^
+2025-11-17T08:08:05.065913892Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"What’s on your mind today then?"}
+2025-11-17T08:08:05.070485209Z [inf]  💬 Stored message: ai - What’s on your mind today then?...
+2025-11-17T08:08:05.070491737Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"What’s on your mind today then?"}
+2025-11-17T08:08:05.264719397Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:08:05.956995846Z [err]      except Exception as e:
+2025-11-17T08:08:05.957006573Z [err]      ^^^^^^
+2025-11-17T08:08:05.957014280Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:05.957042848Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:07.052361682Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:07.052368487Z [err]      except Exception as e:
+2025-11-17T08:08:07.052374444Z [err]      ^^^^^^
+2025-11-17T08:08:07.052380660Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:08.181914074Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:08.181921660Z [err]      except Exception as e:
+2025-11-17T08:08:08.181926564Z [err]      ^^^^^^
+2025-11-17T08:08:08.181931322Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:10.073158700Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:10.073188600Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:10.073197448Z [err]      except Exception as e:
+2025-11-17T08:08:10.073203089Z [err]      ^^^^^^
+2025-11-17T08:08:10.123636775Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:11.053025535Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:11.053033726Z [err]      except Exception as e:
+2025-11-17T08:08:11.053038946Z [err]      ^^^^^^
+2025-11-17T08:08:11.053043566Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:12.105806471Z [err]  2025-11-17 08:08:10.261 UTC [76] LOG:  checkpoint starting: time
+2025-11-17T08:08:12.108858640Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:12.108926085Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:12.108932201Z [err]      except Exception as e:
+2025-11-17T08:08:12.108938438Z [err]      ^^^^^^
+2025-11-17T08:08:12.110688733Z [err]  2025-11-17 08:08:11.282 UTC [76] LOG:  checkpoint complete: wrote 11 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.006 s, sync=0.004 s, total=1.022 s; sync files=11, longest=0.004 s, average=0.001 s; distance=23 kB, estimate=94 kB; lsn=0/19B9F70, redo lsn=0/19B9F18
+2025-11-17T08:08:13.184717516Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:13.184724429Z [err]      except Exception as e:
+2025-11-17T08:08:13.184730988Z [err]      ^^^^^^
+2025-11-17T08:08:13.184737332Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:14.331592840Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:14.331601524Z [err]      except Exception as e:
+2025-11-17T08:08:14.331608206Z [err]      ^^^^^^
+2025-11-17T08:08:14.331613737Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:16.461457047Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:16.461504289Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:16.461517897Z [err]      except Exception as e:
+2025-11-17T08:08:16.461525118Z [err]      ^^^^^^
+2025-11-17T08:08:16.541197648Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Just thinking about different career choices. Was looking at bus driving or painting."}
+2025-11-17T08:08:16.541659099Z [inf]  💬 Stored message: user - Just thinking about different career choices. Was ...
+2025-11-17T08:08:16.541663631Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Just thinking about different career choices. Was looking at bus driving or painting."}
+2025-11-17T08:08:17.334227348Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:17.811425770Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:17.811432603Z [err]      except Exception as e:
+2025-11-17T08:08:17.811437556Z [err]      ^^^^^^
+2025-11-17T08:08:17.811442406Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:18.518409276Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"A difficult decision?"}
+2025-11-17T08:08:18.518419517Z [inf]  💬 Stored message: user - A difficult decision?...
+2025-11-17T08:08:18.518426755Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"A difficult decision?"}
+2025-11-17T08:08:19.284674838Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"That’s an interesting mix!"}
+2025-11-17T08:08:19.289092502Z [inf]  💬 Stored message: ai - That’s an interesting mix!...
+2025-11-17T08:08:19.289100550Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"That’s an interesting mix!"}
+2025-11-17T08:08:19.544381965Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:19.544390973Z [err]      except Exception as e:
+2025-11-17T08:08:19.544398267Z [err]      ^^^^^^
+2025-11-17T08:08:19.544406590Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:20.603120414Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:20.603131634Z [err]      except Exception as e:
+2025-11-17T08:08:20.603139582Z [err]      ^^^^^^
+2025-11-17T08:08:20.603147379Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:20.887065545Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"What draws you to bus driving and painting?"}
+2025-11-17T08:08:20.887303126Z [inf]  💬 Stored message: ai - What draws you to bus driving and painting?...
+2025-11-17T08:08:20.887314213Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"What draws you to bus driving and painting?"}
+2025-11-17T08:08:20.948154218Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:08:22.618979267Z [err]      except Exception as e:
+2025-11-17T08:08:22.618987049Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:22.618992059Z [err]      ^^^^^^
+2025-11-17T08:08:22.619000252Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:23.656016087Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:23.656023614Z [err]      except Exception as e:
+2025-11-17T08:08:23.656031541Z [err]      ^^^^^^
+2025-11-17T08:08:23.656038188Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:24.772802160Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:24.772812037Z [err]      except Exception as e:
+2025-11-17T08:08:24.772819216Z [err]      ^^^^^^
+2025-11-17T08:08:24.772825699Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:26.607791535Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:26.607798184Z [err]      except Exception as e:
+2025-11-17T08:08:26.607804111Z [err]      ^^^^^^
+2025-11-17T08:08:26.607809813Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:26.948348902Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:27.704682577Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:27.704687213Z [err]      except Exception as e:
+2025-11-17T08:08:27.704691372Z [err]      ^^^^^^
+2025-11-17T08:08:27.704695609Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:28.956462408Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:28.956472427Z [err]      except Exception as e:
+2025-11-17T08:08:28.956478550Z [err]      ^^^^^^
+2025-11-17T08:08:28.956484097Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:29.719343480Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Bus driving is people, and painting is creative."}
+2025-11-17T08:08:29.724109381Z [inf]  💬 Stored message: user - Bus driving is people, and painting is creative....
+2025-11-17T08:08:29.724116427Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Bus driving is people, and painting is creative."}
+2025-11-17T08:08:30.520587097Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Both sound rewarding in different ways!"}
+2025-11-17T08:08:30.521002634Z [inf]  💬 Stored message: ai - Both sound rewarding in different ways!...
+2025-11-17T08:08:30.521019800Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Both sound rewarding in different ways!"}
+2025-11-17T08:08:30.669333926Z [err]      ^^^^^^
+2025-11-17T08:08:30.669364828Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:30.669388867Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:30.669395376Z [err]      except Exception as e:
+2025-11-17T08:08:32.666507186Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:32.666514789Z [err]      except Exception as e:
+2025-11-17T08:08:32.666521972Z [err]      ^^^^^^
+2025-11-17T08:08:32.666530101Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:32.798768665Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Do you lean more towards one over the other right now?"}
+2025-11-17T08:08:32.798773369Z [inf]  💬 Stored message: ai - Do you lean more towards one over the other right ...
+2025-11-17T08:08:32.798777693Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Do you lean more towards one over the other right now?"}
+2025-11-17T08:08:32.798782498Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:08:33.681138329Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:33.681151648Z [err]      except Exception as e:
+2025-11-17T08:08:33.681156451Z [err]      ^^^^^^
+2025-11-17T08:08:33.681161805Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:34.610711505Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:34.610716540Z [err]      except Exception as e:
+2025-11-17T08:08:34.610721450Z [err]      ^^^^^^
+2025-11-17T08:08:34.610727218Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:35.726743973Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:35.726750785Z [err]      except Exception as e:
+2025-11-17T08:08:35.726756782Z [err]      ^^^^^^
+2025-11-17T08:08:35.726765030Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:36.985570199Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:36.985577450Z [err]      except Exception as e:
+2025-11-17T08:08:36.985583795Z [err]      ^^^^^^
+2025-11-17T08:08:36.985589773Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:37.711405579Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:37.711410156Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"No."}
+2025-11-17T08:08:37.711416174Z [inf]  💬 Stored message: user - No....
+2025-11-17T08:08:37.711421622Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"No."}
+2025-11-17T08:08:38.406286429Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Got it!"}
+2025-11-17T08:08:38.406292552Z [inf]  💬 Stored message: ai - Got it!...
+2025-11-17T08:08:38.406298325Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Got it!"}
+2025-11-17T08:08:38.795628365Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:38.795645625Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:38.795649184Z [err]      except Exception as e:
+2025-11-17T08:08:38.795659713Z [err]      ^^^^^^
+2025-11-17T08:08:39.165984421Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Have you thought about trying both in some capacity, like part-time or as a hobby?"}
+2025-11-17T08:08:39.170224651Z [inf]  💬 Stored message: ai - Have you thought about trying both in some capacit...
+2025-11-17T08:08:39.170231156Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Have you thought about trying both in some capacity, like part-time or as a hobby?"}
+2025-11-17T08:08:39.866377224Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:39.866381888Z [err]      except Exception as e:
+2025-11-17T08:08:39.866388713Z [err]      ^^^^^^
+2025-11-17T08:08:39.866393327Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:40.566545034Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:08:41.078161604Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:41.078170996Z [err]      except Exception as e:
+2025-11-17T08:08:41.078176936Z [err]      ^^^^^^
+2025-11-17T08:08:41.078182781Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:42.955797658Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:42.955804229Z [err]      except Exception as e:
+2025-11-17T08:08:42.955810600Z [err]      ^^^^^^
+2025-11-17T08:08:42.955816910Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:43.966746252Z [err]      ^^^^^^
+2025-11-17T08:08:43.966759058Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:43.966793310Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:43.966801088Z [err]      except Exception as e:
+2025-11-17T08:08:45.049319470Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:45.049326513Z [err]      except Exception as e:
+2025-11-17T08:08:45.049332812Z [err]      ^^^^^^
+2025-11-17T08:08:45.049337292Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:46.944335228Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:08:47.041545668Z [err]      except Exception as e:
+2025-11-17T08:08:47.041556165Z [err]      ^^^^^^
+2025-11-17T08:08:47.041563054Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:47.041678495Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:47.333043179Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Would I do that?"}
+2025-11-17T08:08:47.333051962Z [inf]  💬 Stored message: user - Would I do that?...
+2025-11-17T08:08:47.333059211Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Would I do that?"}
+2025-11-17T08:08:47.936343715Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:47.936353137Z [err]      except Exception as e:
+2025-11-17T08:08:47.936359079Z [err]      ^^^^^^
+2025-11-17T08:08:47.936366736Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:48.054599081Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Why not?"}
+2025-11-17T08:08:48.060061772Z [inf]  💬 Stored message: ai - Why not?...
+2025-11-17T08:08:48.060067821Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Why not?"}
+2025-11-17T08:08:48.908888992Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"It could give you a taste of both worlds!"}
+2025-11-17T08:08:48.908892930Z [inf]  💬 Stored message: ai - It could give you a taste of both worlds!...
+2025-11-17T08:08:48.908897391Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"It could give you a taste of both worlds!"}
+2025-11-17T08:08:48.956286722Z [err]      ^^^^^^
+2025-11-17T08:08:48.956296110Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:48.956367235Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:48.956372643Z [err]      except Exception as e:
+2025-11-17T08:08:49.946237255Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:49.946242271Z [err]      except Exception as e:
+2025-11-17T08:08:49.946246549Z [err]      ^^^^^^
+2025-11-17T08:08:49.946251387Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:50.944622690Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:50.944630367Z [err]      except Exception as e:
+2025-11-17T08:08:50.944637136Z [err]      ^^^^^^
+2025-11-17T08:08:50.944643973Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:51.146083040Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"What do you think?"}
+2025-11-17T08:08:51.146089660Z [inf]  💬 Stored message: ai - What do you think?...
+2025-11-17T08:08:51.146096151Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"What do you think?"}
+2025-11-17T08:08:51.193582194Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:08:51.971595539Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:51.971602306Z [err]      except Exception as e:
+2025-11-17T08:08:51.971608673Z [err]      ^^^^^^
+2025-11-17T08:08:51.971614919Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:53.032137861Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:53.032144596Z [err]      except Exception as e:
+2025-11-17T08:08:53.032149821Z [err]      ^^^^^^
+2025-11-17T08:08:53.032154539Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:54.215227099Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:54.215232761Z [err]      except Exception as e:
+2025-11-17T08:08:54.215237426Z [err]      ^^^^^^
+2025-11-17T08:08:54.215242199Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:55.626012799Z [inf]  🛑 Twilio stop event
+2025-11-17T08:08:55.641732191Z [inf]  💾 Session e7973e0a-29c7-435d-a864-432e30710490 ended and saved
+2025-11-17T08:08:56.110426302Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:56.110430702Z [err]      except Exception as e:
+2025-11-17T08:08:56.110435059Z [err]      ^^^^^^
+2025-11-17T08:08:56.110439446Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:57.036688071Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:57.036693221Z [err]      except Exception as e:
+2025-11-17T08:08:57.036697594Z [err]      ^^^^^^
+2025-11-17T08:08:57.036702083Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:08:58.274218100Z [err]    File "/app/server.py", line 276
+2025-11-17T08:08:58.274224766Z [err]      except Exception as e:
+2025-11-17T08:08:58.274231008Z [err]      ^^^^^^
+2025-11-17T08:08:58.274238080Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:00.371207734Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:00.371213673Z [err]      except Exception as e:
+2025-11-17T08:09:00.371218809Z [err]      ^^^^^^
+2025-11-17T08:09:00.371223754Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:01.079886905Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:01.079894133Z [err]      except Exception as e:
+2025-11-17T08:09:01.079899242Z [err]      ^^^^^^
+2025-11-17T08:09:01.079903468Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:02.213629392Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:02.213634743Z [err]      except Exception as e:
+2025-11-17T08:09:02.213640398Z [err]      ^^^^^^
+2025-11-17T08:09:02.213645862Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:03.534143454Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:03.534151905Z [err]      except Exception as e:
+2025-11-17T08:09:03.534158393Z [err]      ^^^^^^
+2025-11-17T08:09:03.534164603Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:05.171096832Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:05.171104671Z [err]      except Exception as e:
+2025-11-17T08:09:05.171111570Z [err]      ^^^^^^
+2025-11-17T08:09:05.171118442Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:06.206719232Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:06.206728365Z [err]      except Exception as e:
+2025-11-17T08:09:06.206734684Z [err]      ^^^^^^
+2025-11-17T08:09:06.206740863Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:07.618586760Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:07.618593607Z [err]      except Exception as e:
+2025-11-17T08:09:07.618598351Z [err]      ^^^^^^
+2025-11-17T08:09:07.618602674Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:09.221966521Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:09.221971791Z [err]      except Exception as e:
+2025-11-17T08:09:09.221978755Z [err]      ^^^^^^
+2025-11-17T08:09:09.221984427Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:10.254350697Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:10.254356122Z [err]      except Exception as e:
+2025-11-17T08:09:10.254361061Z [err]      ^^^^^^
+2025-11-17T08:09:10.254367064Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:11.452896513Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:11.452901062Z [err]      except Exception as e:
+2025-11-17T08:09:11.452905359Z [err]      ^^^^^^
+2025-11-17T08:09:11.452909156Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:12.721081003Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:12.721087908Z [err]      except Exception as e:
+2025-11-17T08:09:12.721093220Z [err]      ^^^^^^
+2025-11-17T08:09:12.721098111Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:14.459877302Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:14.459914283Z [err]      except Exception as e:
+2025-11-17T08:09:14.459920054Z [err]      ^^^^^^
+2025-11-17T08:09:14.459925502Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:15.456830458Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:15.456907001Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:15.456912939Z [err]      except Exception as e:
+2025-11-17T08:09:15.456918953Z [err]      ^^^^^^
+2025-11-17T08:09:15.644584284Z [inf]  📨 Deepgram message: {"type":"Error","description":"We waited too long for a websocket message. Please ensure that you're sending binary messages containing user speech.","code":"CLIENT_MESSAGE_TIMEOUT"}
+2025-11-17T08:09:16.513120666Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:16.513129788Z [err]      except Exception as e:
+2025-11-17T08:09:16.513135516Z [err]      ^^^^^^
+2025-11-17T08:09:16.513140893Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:18.369144275Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:18.369150491Z [err]      except Exception as e:
+2025-11-17T08:09:18.369157270Z [err]      ^^^^^^
+2025-11-17T08:09:18.369166096Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:19.345427567Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:19.345433828Z [err]      except Exception as e:
+2025-11-17T08:09:19.345440038Z [err]      ^^^^^^
+2025-11-17T08:09:19.345449835Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:20.322764507Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:20.322774989Z [err]      except Exception as e:
+2025-11-17T08:09:20.322779729Z [err]      ^^^^^^
+2025-11-17T08:09:20.322785158Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:21.508381787Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:21.508387982Z [err]      except Exception as e:
+2025-11-17T08:09:21.508394433Z [err]      ^^^^^^
+2025-11-17T08:09:21.508399696Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:22.641290061Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:22.641295399Z [err]      except Exception as e:
+2025-11-17T08:09:22.641300068Z [err]      ^^^^^^
+2025-11-17T08:09:22.641307988Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:24.529038304Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:24.529058200Z [err]      except Exception as e:
+2025-11-17T08:09:24.529063490Z [err]      ^^^^^^
+2025-11-17T08:09:24.529069261Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:25.441778678Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:25.441783798Z [err]      except Exception as e:
+2025-11-17T08:09:25.441789188Z [err]      ^^^^^^
+2025-11-17T08:09:25.441794355Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:26.430735248Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:26.430743632Z [err]      except Exception as e:
+2025-11-17T08:09:26.430749302Z [err]      ^^^^^^
+2025-11-17T08:09:26.430754813Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:27.696394906Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:27.696404781Z [err]      except Exception as e:
+2025-11-17T08:09:27.696412660Z [err]      ^^^^^^
+2025-11-17T08:09:27.696418973Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:29.670416993Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:29.670426856Z [err]      except Exception as e:
+2025-11-17T08:09:29.670433452Z [err]      ^^^^^^
+2025-11-17T08:09:29.670438909Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:31.617491822Z [err]      except Exception as e:
+2025-11-17T08:09:31.617504031Z [err]      ^^^^^^
+2025-11-17T08:09:31.617511003Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:31.617552662Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:32.607961854Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:32.607969140Z [err]      except Exception as e:
+2025-11-17T08:09:32.608053569Z [err]      ^^^^^^
+2025-11-17T08:09:32.608059569Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:33.798185726Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:33.798191917Z [err]      except Exception as e:
+2025-11-17T08:09:33.798196269Z [err]      ^^^^^^
+2025-11-17T08:09:33.798200382Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:35.678909451Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:35.678918084Z [err]      except Exception as e:
+2025-11-17T08:09:35.678929017Z [err]      ^^^^^^
+2025-11-17T08:09:35.678937679Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:36.710150412Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:36.710156028Z [err]      except Exception as e:
+2025-11-17T08:09:36.710172371Z [err]      ^^^^^^
+2025-11-17T08:09:36.710178920Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:37.807267245Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:37.807278951Z [err]      except Exception as e:
+2025-11-17T08:09:37.807294037Z [err]      ^^^^^^
+2025-11-17T08:09:37.807302415Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:39.149330196Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:39.149339418Z [err]      except Exception as e:
+2025-11-17T08:09:39.149346299Z [err]      ^^^^^^
+2025-11-17T08:09:39.149351920Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:40.826546573Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:40.826552788Z [err]      except Exception as e:
+2025-11-17T08:09:40.826558065Z [err]      ^^^^^^
+2025-11-17T08:09:40.826564329Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:41.812204297Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:41.812208383Z [err]      except Exception as e:
+2025-11-17T08:09:41.812214939Z [err]      ^^^^^^
+2025-11-17T08:09:41.812219906Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:43.138296505Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:43.138300843Z [err]      except Exception as e:
+2025-11-17T08:09:43.138305527Z [err]      ^^^^^^
+2025-11-17T08:09:43.138311417Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:45.063350122Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:45.063363298Z [err]      except Exception as e:
+2025-11-17T08:09:45.063373061Z [err]      ^^^^^^
+2025-11-17T08:09:45.063382294Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:46.026069552Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:46.026076316Z [err]      except Exception as e:
+2025-11-17T08:09:46.026083171Z [err]      ^^^^^^
+2025-11-17T08:09:46.026089571Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:47.939552194Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:47.939558845Z [err]      except Exception as e:
+2025-11-17T08:09:47.939565072Z [err]      ^^^^^^
+2025-11-17T08:09:47.939571317Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:49.165782150Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:49.165788118Z [err]      except Exception as e:
+2025-11-17T08:09:49.165792795Z [err]      ^^^^^^
+2025-11-17T08:09:49.165797645Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:51.110878540Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:51.110884698Z [err]      except Exception as e:
+2025-11-17T08:09:51.110896935Z [err]      ^^^^^^
+2025-11-17T08:09:51.110903656Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:52.177102414Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:52.177108467Z [err]      except Exception as e:
+2025-11-17T08:09:52.177114172Z [err]      ^^^^^^
+2025-11-17T08:09:52.177120124Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:53.193107945Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:53.193113575Z [err]      except Exception as e:
+2025-11-17T08:09:53.193123385Z [err]      ^^^^^^
+2025-11-17T08:09:53.193129398Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:54.169119917Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:54.169127493Z [err]      except Exception as e:
+2025-11-17T08:09:54.169133394Z [err]      ^^^^^^
+2025-11-17T08:09:54.169139674Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:55.231049369Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:55.231074999Z [err]      except Exception as e:
+2025-11-17T08:09:55.231081110Z [err]      ^^^^^^
+2025-11-17T08:09:55.231087420Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:56.374287676Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:56.374294629Z [err]      except Exception as e:
+2025-11-17T08:09:56.374300976Z [err]      ^^^^^^
+2025-11-17T08:09:56.374307842Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:09:58.329503980Z [err]    File "/app/server.py", line 276
+2025-11-17T08:09:58.329508268Z [err]      except Exception as e:
+2025-11-17T08:09:58.329512306Z [err]      ^^^^^^
+2025-11-17T08:09:58.329516347Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:04.414405045Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:04.414412011Z [err]      except Exception as e:
+2025-11-17T08:10:04.414418262Z [err]      ^^^^^^
+2025-11-17T08:10:04.414423440Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:05.648063286Z [inf]  🌐 Request: POST /webhook/voice from 100.64.0.5
+2025-11-17T08:10:05.648072098Z [inf]  🎯 Voice webhook: Call from +61412247247, CallSid: CA13ef5cb1475073153e09a7c3738b4318
+2025-11-17T08:10:05.648077835Z [inf]  🔗 Connecting to WebSocket: wss://voice-bridge-backend-production.up.railway.app/twilio
+2025-11-17T08:10:05.648082494Z [inf]  ✅ Response: POST /webhook/voice -> 200
+2025-11-17T08:10:05.648087006Z [inf]  🌐 Request: GET /twilio from 100.64.0.6
+2025-11-17T08:10:05.648091939Z [inf]  🔍 WEBSOCKET DEBUG: Incoming connection from 100.64.0.6
+2025-11-17T08:10:05.648098620Z [inf]  🔍 Headers: {'Host': 'voice-bridge-backend-production.up.railway.app', 'User-Agent': 'Twilio.TmeWs/1.0', 'Connection': 'Upgrade', 'Sec-WebSocket-Key': 'MkHASsYwGmGE6P/rZcBd3Q==', 'Sec-WebSocket-Version': '13', 'Upgrade': 'websocket', 'X-Forwarded-For': '54.88.124.60', 'X-Forwarded-Host': 'voice-bridge-backend-production.up.railway.app', 'X-Forwarded-Proto': 'https', 'X-Railway-Edge': 'railway/us-east4-eqdc4a', 'X-Railway-Request-Id': '6AH5fmNFRJyvTH_sPvyhXg', 'X-Real-Ip': '54.88.124.60', 'X-Request-Start': '1763366998071', 'X-Twilio-Signature': 'rXvPEkPetd5bm3+VAXLMlRWqRvM=', 'Accept-Encoding': 'gzip'}
+2025-11-17T08:10:05.648103337Z [inf]  🔍 Query params: {}
+2025-11-17T08:10:05.648111016Z [inf]  📞 WebSocket connection established on path: /twilio
+2025-11-17T08:10:05.648118775Z [inf]  📱 twilio_receiver started
+2025-11-17T08:10:05.648124145Z [inf]  ✅ Twilio connected
+2025-11-17T08:10:05.648128130Z [inf]  🚀 Received Twilio start event
+2025-11-17T08:10:05.648132103Z [inf]  📱 Updated caller info from parameters: +61412247247
+2025-11-17T08:10:05.648136581Z [inf]  🔗 Stream ID: MZ9c3db857df09b6dd43e156d82dc4f1cc
+2025-11-17T08:10:05.648141467Z [inf]  ☎️ Actual Call SID: CA13ef5cb1475073153e09a7c3738b4318
+2025-11-17T08:10:05.648490819Z [inf]  💾 Loaded caller context - Session 7
+2025-11-17T08:10:05.648496678Z [inf]  📚 Found 6 previous sessions
+2025-11-17T08:10:05.648501387Z [inf]  🧠 AI prompt enhanced with caller context
+2025-11-17T08:10:05.648505559Z [inf]  ⚙️ Configuration sent to Deepgram with caller context
+2025-11-17T08:10:05.648509191Z [inf]  🎤 sts_sender started
+2025-11-17T08:10:05.648513122Z [inf]  🔊 sts_receiver started
+2025-11-17T08:10:05.648533153Z [inf]  🌊 Got stream ID: MZ9c3db857df09b6dd43e156d82dc4f1cc
+2025-11-17T08:10:05.648538265Z [inf]  📨 Deepgram message: {"type":"Welcome","request_id":"b4648e0f-7fd3-4867-bb44-ba06694e2cb0"}
+2025-11-17T08:10:05.648542355Z [inf]  📨 Deepgram message: {"type":"SettingsApplied"}
+2025-11-17T08:10:05.648547682Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T08:10:05.648551430Z [inf]  💬 Stored message: ai - Hello! How can I help you today?...
+2025-11-17T08:10:05.648556119Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T08:10:05.648560275Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:10:05.648564526Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:10:05.648568153Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Hey. What were we talking about last time?"}
+2025-11-17T08:10:05.648571809Z [inf]  💬 Stored message: user - Hey. What were we talking about last time?...
+2025-11-17T08:10:05.648575652Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Hey. What were we talking about last time?"}
+2025-11-17T08:10:05.648580132Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hey!"}
+2025-11-17T08:10:05.648584145Z [inf]  💬 Stored message: ai - Hey!...
+2025-11-17T08:10:05.649025129Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hey!"}
+2025-11-17T08:10:05.649030146Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Last time we chatted about a few different topics."}
+2025-11-17T08:10:05.649034417Z [inf]  💬 Stored message: ai - Last time we chatted about a few different topics....
+2025-11-17T08:10:05.649038373Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Last time we chatted about a few different topics."}
+2025-11-17T08:10:06.390328196Z [err]      ^^^^^^
+2025-11-17T08:10:06.390339757Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:06.390456181Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:06.390461559Z [err]      except Exception as e:
+2025-11-17T08:10:07.443861438Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:07.443869390Z [err]      except Exception as e:
+2025-11-17T08:10:07.443875610Z [err]      ^^^^^^
+2025-11-17T08:10:07.443881469Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:07.793673245Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"You mentioned some plans for the weekend."}
+2025-11-17T08:10:07.799157303Z [inf]  💬 Stored message: ai - You mentioned some plans for the weekend....
+2025-11-17T08:10:07.799161606Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"You mentioned some plans for the weekend."}
+2025-11-17T08:10:08.418642836Z [err]      ^^^^^^
+2025-11-17T08:10:08.418650223Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:08.418654424Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:08.418662552Z [err]      except Exception as e:
+2025-11-17T08:10:09.626529437Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:09.626535669Z [err]      except Exception as e:
+2025-11-17T08:10:09.626540499Z [err]      ^^^^^^
+2025-11-17T08:10:09.626545526Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:10.031423468Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Did those go well?"}
+2025-11-17T08:10:10.038433748Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Did those go well?"}
+2025-11-17T08:10:10.038448105Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:10:10.038485129Z [inf]  💬 Stored message: ai - Did those go well?...
+2025-11-17T08:10:11.370532135Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:11.370540015Z [err]      except Exception as e:
+2025-11-17T08:10:11.370545874Z [err]      ^^^^^^
+2025-11-17T08:10:11.370552531Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:12.497378427Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:12.497388596Z [err]      except Exception as e:
+2025-11-17T08:10:12.497394849Z [err]      ^^^^^^
+2025-11-17T08:10:12.497401144Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:14.595201540Z [err]      except Exception as e:
+2025-11-17T08:10:14.595213018Z [err]      ^^^^^^
+2025-11-17T08:10:14.595220028Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:14.595390879Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:15.531840868Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:15.531848187Z [err]      except Exception as e:
+2025-11-17T08:10:15.531854683Z [err]      ^^^^^^
+2025-11-17T08:10:15.531860837Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:15.913613913Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:10:16.687248429Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:16.687255942Z [err]      except Exception as e:
+2025-11-17T08:10:16.687263438Z [err]      ^^^^^^
+2025-11-17T08:10:16.687300093Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:17.146951685Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Was there something else we were talking about?"}
+2025-11-17T08:10:17.146956142Z [inf]  💬 Stored message: user - Was there something else we were talking about?...
+2025-11-17T08:10:17.146960188Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Was there something else we were talking about?"}
+2025-11-17T08:10:17.950484974Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Yeah, we also touched on your new hobby!"}
+2025-11-17T08:10:17.950489549Z [inf]  💬 Stored message: ai - Yeah, we also touched on your new hobby!...
+2025-11-17T08:10:17.950494137Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Yeah, we also touched on your new hobby!"}
+2025-11-17T08:10:18.510112419Z [err]      except Exception as e:
+2025-11-17T08:10:18.510129542Z [err]      ^^^^^^
+2025-11-17T08:10:18.510139347Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:18.510241733Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:19.517061297Z [err]      except Exception as e:
+2025-11-17T08:10:19.517073536Z [err]      ^^^^^^
+2025-11-17T08:10:19.517080750Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:19.517152569Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:20.146544590Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"How's that been going for you?"}
+2025-11-17T08:10:20.146922861Z [inf]  💬 Stored message: ai - How's that been going for you?...
+2025-11-17T08:10:20.146928557Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"How's that been going for you?"}
+2025-11-17T08:10:20.188163586Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:10:20.585430717Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:20.585437912Z [err]      except Exception as e:
+2025-11-17T08:10:20.585445552Z [err]      ^^^^^^
+2025-11-17T08:10:20.585453074Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:21.804796625Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:21.804806035Z [err]      except Exception as e:
+2025-11-17T08:10:21.804811969Z [err]      ^^^^^^
+2025-11-17T08:10:21.804817541Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:23.035869654Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:23.035882218Z [err]      except Exception as e:
+2025-11-17T08:10:23.035889506Z [err]      ^^^^^^
+2025-11-17T08:10:23.035910237Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:23.109343463Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T08:10:23.928344320Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Which hobby was that?"}
+2025-11-17T08:10:23.928351243Z [inf]  💬 Stored message: user - Which hobby was that?...
+2025-11-17T08:10:23.928357449Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Which hobby was that?"}
+2025-11-17T08:10:24.783977022Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"You mentioned you were trying out painting!"}
+2025-11-17T08:10:24.783981720Z [inf]  💬 Stored message: ai - You mentioned you were trying out painting!...
+2025-11-17T08:10:24.783985634Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"You mentioned you were trying out painting!"}
+2025-11-17T08:10:24.826457855Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:24.826465899Z [err]      except Exception as e:
+2025-11-17T08:10:24.826473851Z [err]      ^^^^^^
+2025-11-17T08:10:24.826481643Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:25.780213753Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:25.780219737Z [err]      except Exception as e:
+2025-11-17T08:10:25.780225774Z [err]      ^^^^^^
+2025-11-17T08:10:25.780230287Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:26.804667575Z [err]      ^^^^^^
+2025-11-17T08:10:26.804677338Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:26.804899854Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:26.804905574Z [err]      except Exception as e:
+2025-11-17T08:10:26.860897325Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Have you had a chance to work on it more?"}
+2025-11-17T08:10:26.865532934Z [inf]  💬 Stored message: ai - Have you had a chance to work on it more?...
+2025-11-17T08:10:26.865538832Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Have you had a chance to work on it more?"}
+2025-11-17T08:10:26.905181410Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T08:10:28.054729479Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:28.054741263Z [err]      except Exception as e:
+2025-11-17T08:10:28.054748642Z [err]      ^^^^^^
+2025-11-17T08:10:28.054755415Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:30.158768276Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:30.158915383Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:30.158922141Z [err]      except Exception as e:
+2025-11-17T08:10:30.158930913Z [err]      ^^^^^^
+2025-11-17T08:10:31.848621977Z [inf]  🛑 Twilio stop event
+2025-11-17T08:10:31.853055448Z [inf]  💾 Session 922a5832-0a54-49c3-ae2d-08038f08ea96 ended and saved
+2025-11-17T08:10:32.183670007Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:32.183675386Z [err]      except Exception as e:
+2025-11-17T08:10:32.183681235Z [err]      ^^^^^^
+2025-11-17T08:10:32.183687969Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:33.060942162Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:33.060948280Z [err]      except Exception as e:
+2025-11-17T08:10:33.060954989Z [err]      ^^^^^^
+2025-11-17T08:10:33.060961104Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:34.287878214Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:34.287885242Z [err]      except Exception as e:
+2025-11-17T08:10:34.287890476Z [err]      ^^^^^^
+2025-11-17T08:10:34.287895006Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:36.142642771Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:36.142649599Z [err]      except Exception as e:
+2025-11-17T08:10:36.142655410Z [err]      ^^^^^^
+2025-11-17T08:10:36.142664898Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:37.105141086Z [err]      except Exception as e:
+2025-11-17T08:10:37.105151307Z [err]      ^^^^^^
+2025-11-17T08:10:37.105156760Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:37.105184909Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:38.100845062Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:38.100871925Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:38.100878835Z [err]      except Exception as e:
+2025-11-17T08:10:38.100886426Z [err]      ^^^^^^
+2025-11-17T08:10:39.359251503Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:39.359257240Z [err]      except Exception as e:
+2025-11-17T08:10:39.359263072Z [err]      ^^^^^^
+2025-11-17T08:10:39.359268595Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:40.655938458Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:40.655949455Z [err]      except Exception as e:
+2025-11-17T08:10:40.655956754Z [err]      ^^^^^^
+2025-11-17T08:10:40.655963498Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:42.450676448Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:42.450681500Z [err]      except Exception as e:
+2025-11-17T08:10:42.450689757Z [err]      ^^^^^^
+2025-11-17T08:10:42.450700460Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:42.545151149Z [err]  2025-11-17 08:10:41.062 UTC [5462] ERROR:  update or delete on table "sessions" violates foreign key constraint "messages_session_id_fkey" on table "messages"
+2025-11-17T08:10:42.545163794Z [err]  2025-11-17 08:10:41.062 UTC [5462] DETAIL:  Key (session_id)=(a945409b-300c-409e-ab56-516dc4a3e087) is still referenced from table "messages".
+2025-11-17T08:10:42.545172330Z [err]  2025-11-17 08:10:41.062 UTC [5462] STATEMENT:  SET statement_timeout = '30s'; DELETE FROM public."sessions" WHERE "session_id" IN ('a945409b-300c-409e-ab56-516dc4a3e087')
+2025-11-17T08:10:43.516632710Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:43.516638567Z [err]      except Exception as e:
+2025-11-17T08:10:43.516643863Z [err]      ^^^^^^
+2025-11-17T08:10:43.516649455Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:44.521663927Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:44.521784567Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:44.521791176Z [err]      except Exception as e:
+2025-11-17T08:10:44.521797667Z [err]      ^^^^^^
+2025-11-17T08:10:46.421462860Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:46.421476206Z [err]      except Exception as e:
+2025-11-17T08:10:46.421486429Z [err]      ^^^^^^
+2025-11-17T08:10:46.421493832Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:47.595930899Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:47.596180046Z [err]      except Exception as e:
+2025-11-17T08:10:47.596185723Z [err]      ^^^^^^
+2025-11-17T08:10:47.596191313Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:48.511136472Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:48.511140123Z [err]      except Exception as e:
+2025-11-17T08:10:48.511143778Z [err]      ^^^^^^
+2025-11-17T08:10:48.511147984Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:49.805520861Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:49.805526411Z [err]      except Exception as e:
+2025-11-17T08:10:49.805531980Z [err]      ^^^^^^
+2025-11-17T08:10:49.805537503Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:50.998097169Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:50.998104023Z [err]      except Exception as e:
+2025-11-17T08:10:50.998108997Z [err]      ^^^^^^
+2025-11-17T08:10:50.998116530Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:51.856083482Z [inf]  📨 Deepgram message: {"type":"Error","description":"We waited too long for a websocket message. Please ensure that you're sending binary messages containing user speech.","code":"CLIENT_MESSAGE_TIMEOUT"}
+2025-11-17T08:10:52.590847902Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:52.590853887Z [err]      except Exception as e:
+2025-11-17T08:10:52.590860468Z [err]      ^^^^^^
+2025-11-17T08:10:52.590866530Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:53.720899944Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:53.720904540Z [err]      except Exception as e:
+2025-11-17T08:10:53.720910457Z [err]      ^^^^^^
+2025-11-17T08:10:53.720915134Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:54.692821329Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:54.692825951Z [err]      except Exception as e:
+2025-11-17T08:10:54.692830206Z [err]      ^^^^^^
+2025-11-17T08:10:54.692835465Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:55.000000000Z [inf]  Stopping Container
+2025-11-17T08:10:55.717452701Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:55.717461079Z [err]      except Exception as e:
+2025-11-17T08:10:55.717465953Z [err]      ^^^^^^
+2025-11-17T08:10:55.717469990Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:10:57.155674686Z [err]    File "/app/server.py", line 276
+2025-11-17T08:10:57.155682730Z [err]      except Exception as e:
+2025-11-17T08:10:57.155688678Z [err]      ^^^^^^
+2025-11-17T08:10:57.155694351Z [err]  SyntaxError: invalid syntax
+2025-11-17T08:11:02.925082691Z [err]  2025-11-17 08:10:54.096 UTC [5473] ERROR:  update or delete on table "sessions" violates foreign key constraint "messages_session_id_fkey" on table "messages"
+2025-11-17T08:11:02.925097097Z [err]  2025-11-17 08:10:54.096 UTC [5473] DETAIL:  Key (session_id)=(a945409b-300c-409e-ab56-516dc4a3e087) is still referenced from table "messages".
+2025-11-17T08:11:02.925105732Z [err]  2025-11-17 08:10:54.096 UTC [5473] STATEMENT:  SET statement_timeout = '30s'; DELETE FROM public."sessions" WHERE "session_id" IN ('a945409b-300c-409e-ab56-516dc4a3e087')
+2025-11-17T08:11:06.751876283Z [err]  2025-11-17 08:11:06.746 UTC [5477] ERROR:  update or delete on table "sessions" violates foreign key constraint "messages_session_id_fkey" on table "messages"
+2025-11-17T08:11:06.751887779Z [err]  2025-11-17 08:11:06.746 UTC [5477] DETAIL:  Key (session_id)=(a945409b-300c-409e-ab56-516dc4a3e087) is still referenced from table "messages".
+2025-11-17T08:11:06.751893650Z [err]  2025-11-17 08:11:06.746 UTC [5477] STATEMENT:  SET statement_timeout = '30s'; DELETE FROM public."sessions" WHERE "session_id" IN ('a945409b-300c-409e-ab56-516dc4a3e087')

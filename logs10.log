@@ -1,0 +1,219 @@
+2025-11-17T07:51:03.000000000Z [inf]  Starting Container
+2025-11-17T07:51:03.984820716Z [inf]  🚀 Starting Twilio-Deepgram Bridge Server on port 5000
+2025-11-17T07:51:03.984825263Z [inf]  🔍 Health check endpoint: http://0.0.0.0:5000/health
+2025-11-17T07:51:03.984831098Z [inf]  📞 Voice webhook: http://0.0.0.0:5000/webhook/voice
+2025-11-17T07:51:03.984836961Z [inf]  🔌 WebSocket endpoint: ws://0.0.0.0:5000/twilio
+2025-11-17T07:51:03.984841881Z [inf]  ✅ DEEPGRAM_API_KEY found in environment
+2025-11-17T07:51:03.984847973Z [inf]  Database tables created successfully
+2025-11-17T07:51:03.984853461Z [inf]  Database connected successfully
+2025-11-17T07:51:03.984858794Z [inf]  🌟 Server running on 0.0.0.0:5000
+2025-11-17T07:51:03.984863821Z [inf]  🎯 Server is ready to accept connections
+2025-11-17T07:51:03.984871081Z [inf]  🧠 AI memory properly integrated - no duplicate settings!
+2025-11-17T07:51:04.098081303Z [inf]  🌐 Request: GET /health from 100.64.0.2
+2025-11-17T07:51:04.098088226Z [inf]  ✅ Response: GET /health -> 200
+2025-11-17T07:51:10.000000000Z [inf]  Stopping Container
+2025-11-17T07:51:12.596327653Z [err]  2025-11-17 07:51:09.739 UTC [5143] LOG:  could not receive data from client: Connection reset by peer
+2025-11-17T07:51:12.596340859Z [err]  2025-11-17 07:51:09.739 UTC [5144] LOG:  could not receive data from client: Connection reset by peer
+2025-11-17T07:51:15.298670987Z [inf]  Received signal 15 from Railway
+2025-11-17T07:51:15.298680204Z [inf]  Railway sent SIGTERM - but health checks are passing!
+2025-11-17T07:51:15.298686881Z [inf]  Ignoring SIGTERM to keep server running (Railway may be testing)
+2025-11-17T07:52:04.023765415Z [inf]  🌐 Request: POST /webhook/voice from 100.64.0.3
+2025-11-17T07:52:04.023773952Z [inf]  🎯 Voice webhook: Call from +61412247247, CallSid: CA483e23b8c12477422245ddd6c85f7eee
+2025-11-17T07:52:04.023786395Z [inf]  🔗 Connecting to WebSocket: wss://voice-bridge-backend-production.up.railway.app/twilio
+2025-11-17T07:52:04.023791585Z [inf]  ✅ Response: POST /webhook/voice -> 200
+2025-11-17T07:52:04.023797130Z [inf]  🌐 Request: GET /twilio from 100.64.0.4
+2025-11-17T07:52:04.023804066Z [inf]  🔍 WEBSOCKET DEBUG: Incoming connection from 100.64.0.4
+2025-11-17T07:52:04.023809469Z [inf]  🔍 Headers: {'Host': 'voice-bridge-backend-production.up.railway.app', 'User-Agent': 'Twilio.TmeWs/1.0', 'Connection': 'Upgrade', 'Sec-WebSocket-Key': 'CCUoBbEQdXq8XBwG5bJxyw==', 'Sec-WebSocket-Version': '13', 'Upgrade': 'websocket', 'X-Forwarded-For': '184.73.145.64', 'X-Forwarded-Host': 'voice-bridge-backend-production.up.railway.app', 'X-Forwarded-Proto': 'https', 'X-Railway-Edge': 'railway/us-east4-eqdc4a', 'X-Railway-Request-Id': 'ZR2c-WFfSz6vC6DsezItjw', 'X-Real-Ip': '184.73.145.64', 'X-Request-Start': '1763365915147', 'X-Twilio-Signature': 'rXvPEkPetd5bm3+VAXLMlRWqRvM=', 'Accept-Encoding': 'gzip'}
+2025-11-17T07:52:04.023815513Z [inf]  🔍 Query params: {}
+2025-11-17T07:52:04.023820850Z [inf]  📞 WebSocket connection established on path: /twilio
+2025-11-17T07:52:04.023826329Z [inf]  📱 twilio_receiver started
+2025-11-17T07:52:04.023832117Z [inf]  ✅ Twilio connected
+2025-11-17T07:52:04.023837889Z [inf]  🚀 Received Twilio start event
+2025-11-17T07:52:04.023843291Z [inf]  📱 Updated caller info from parameters: +61412247247
+2025-11-17T07:52:04.023849065Z [inf]  🔗 Stream ID: MZ2739f8d5f0523ac4ddc23f0d75430ddb
+2025-11-17T07:52:04.023854067Z [inf]  ☎️ Actual Call SID: CA483e23b8c12477422245ddd6c85f7eee
+2025-11-17T07:52:04.023860249Z [inf]  💾 Loaded caller context - Session 4
+2025-11-17T07:52:04.024827330Z [inf]  📚 Found 3 previous sessions
+2025-11-17T07:52:04.024835959Z [inf]  🧠 AI prompt enhanced with caller context
+2025-11-17T07:52:04.024843503Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Hi. Do you remember what we last spoke about?"}
+2025-11-17T07:52:04.024843771Z [inf]  ⚙️ Configuration sent to Deepgram with caller context
+2025-11-17T07:52:04.024849523Z [inf]  🎤 sts_sender started
+2025-11-17T07:52:04.024856267Z [inf]  🔊 sts_receiver started
+2025-11-17T07:52:04.024857455Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hey!"}
+2025-11-17T07:52:04.024862397Z [inf]  🌊 Got stream ID: MZ2739f8d5f0523ac4ddc23f0d75430ddb
+2025-11-17T07:52:04.024868822Z [inf]  💬 Stored message: ai - Hey!...
+2025-11-17T07:52:04.024870582Z [inf]  📨 Deepgram message: {"type":"Welcome","request_id":"ed5cc494-be44-4d87-9683-cacf628777c0"}
+2025-11-17T07:52:04.024884294Z [inf]  📨 Deepgram message: {"type":"SettingsApplied"}
+2025-11-17T07:52:04.024884635Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hey!"}
+2025-11-17T07:52:04.024892223Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T07:52:04.024897055Z [inf]  💬 Stored message: ai - Hello! How can I help you today?...
+2025-11-17T07:52:04.024901291Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T07:52:04.024905023Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:04.024909735Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:04.024914695Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Hi. Do you remember what we last spoke about?"}
+2025-11-17T07:52:04.024919064Z [inf]  💬 Stored message: user - Hi. Do you remember what we last spoke about?...
+2025-11-17T07:52:04.025452070Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Yes, we talked about a bunch of different topics."}
+2025-11-17T07:52:04.025457170Z [inf]  💬 Stored message: ai - Yes, we talked about a bunch of different topics....
+2025-11-17T07:52:04.025460838Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Yes, we talked about a bunch of different topics."}
+2025-11-17T07:52:05.539562676Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Was there something specific on your mind today?"}
+2025-11-17T07:52:05.539570098Z [inf]  💬 Stored message: ai - Was there something specific on your mind today?...
+2025-11-17T07:52:05.539578448Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Was there something specific on your mind today?"}
+2025-11-17T07:52:05.539586114Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:11.007334343Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:12.209910922Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"What did we talk about?"}
+2025-11-17T07:52:12.216519545Z [inf]  💬 Stored message: user - What did we talk about?...
+2025-11-17T07:52:12.216528635Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"What did we talk about?"}
+2025-11-17T07:52:13.095659904Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"We covered various topics, but I remember you mentioned some interesting hobbies."}
+2025-11-17T07:52:13.095671568Z [inf]  💬 Stored message: ai - We covered various topics, but I remember you ment...
+2025-11-17T07:52:13.095678724Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"We covered various topics, but I remember you mentioned some interesting hobbies."}
+2025-11-17T07:52:17.139778410Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Have you been working on any of those?"}
+2025-11-17T07:52:17.139787261Z [inf]  💬 Stored message: ai - Have you been working on any of those?...
+2025-11-17T07:52:17.139801064Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Have you been working on any of those?"}
+2025-11-17T07:52:17.139806417Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:21.009326939Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:21.834575144Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Which ones did I mention?"}
+2025-11-17T07:52:21.834581655Z [inf]  💬 Stored message: user - Which ones did I mention?...
+2025-11-17T07:52:21.834586070Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Which ones did I mention?"}
+2025-11-17T07:52:23.092383432Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"You talked about photography and hiking."}
+2025-11-17T07:52:23.092391482Z [inf]  💬 Stored message: ai - You talked about photography and hiking....
+2025-11-17T07:52:23.092396682Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"You talked about photography and hiking."}
+2025-11-17T07:52:25.769560479Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Have you had a chance to go on any hikes lately?"}
+2025-11-17T07:52:25.769567817Z [inf]  💬 Stored message: ai - Have you had a chance to go on any hikes lately?...
+2025-11-17T07:52:25.769574749Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Have you had a chance to go on any hikes lately?"}
+2025-11-17T07:52:25.769582545Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:30.882575821Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:33.423964320Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Oh, crap. No. I don't do either of those hobbies."}
+2025-11-17T07:52:33.423971076Z [inf]  💬 Stored message: user - Oh, crap. No. I don't do either of those hobbies....
+2025-11-17T07:52:33.423989123Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Oh, crap. No. I don't do either of those hobbies."}
+2025-11-17T07:52:34.595494969Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Oh, got it!"}
+2025-11-17T07:52:34.603581784Z [inf]  💬 Stored message: ai - Oh, got it!...
+2025-11-17T07:52:34.603592372Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Oh, got it!"}
+2025-11-17T07:52:34.603599104Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:34.979200835Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:35.437724160Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"I just cook."}
+2025-11-17T07:52:35.437729875Z [inf]  💬 Stored message: user - I just cook....
+2025-11-17T07:52:35.437735022Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"I just cook."}
+2025-11-17T07:52:36.233988247Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Cooking is awesome!"}
+2025-11-17T07:52:36.233995052Z [inf]  💬 Stored message: ai - Cooking is awesome!...
+2025-11-17T07:52:36.233999659Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Cooking is awesome!"}
+2025-11-17T07:52:37.739007782Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"What have you been making lately?"}
+2025-11-17T07:52:37.739012564Z [inf]  💬 Stored message: ai - What have you been making lately?...
+2025-11-17T07:52:37.739016844Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"What have you been making lately?"}
+2025-11-17T07:52:37.739020803Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:38.622493726Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:42.623277998Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Sorry?"}
+2025-11-17T07:52:42.623283488Z [inf]  💬 Stored message: user - Sorry?...
+2025-11-17T07:52:42.623288357Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Sorry?"}
+2025-11-17T07:52:43.322977328Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"I was just curious about what you've been cooking lately!"}
+2025-11-17T07:52:43.329595041Z [inf]  💬 Stored message: ai - I was just curious about what you've been cooking ...
+2025-11-17T07:52:43.329616161Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"I was just curious about what you've been cooking lately!"}
+2025-11-17T07:52:46.198880682Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Any new recipes?"}
+2025-11-17T07:52:46.198886107Z [inf]  💬 Stored message: ai - Any new recipes?...
+2025-11-17T07:52:46.198890346Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Any new recipes?"}
+2025-11-17T07:52:46.198895336Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:52:50.632461239Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:52:52.246904186Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Stuff for my keto diet."}
+2025-11-17T07:52:52.246908843Z [inf]  💬 Stored message: user - Stuff for my keto diet....
+2025-11-17T07:52:52.246912865Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Stuff for my keto diet."}
+2025-11-17T07:52:53.282117295Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Nice!"}
+2025-11-17T07:52:53.282122456Z [inf]  💬 Stored message: ai - Nice!...
+2025-11-17T07:52:53.282127259Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Nice!"}
+2025-11-17T07:52:53.804296461Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"What’s your favorite keto dish so far?"}
+2025-11-17T07:52:53.806283933Z [inf]  💬 Stored message: ai - What’s your favorite keto dish so far?...
+2025-11-17T07:52:53.806292881Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"What’s your favorite keto dish so far?"}
+2025-11-17T07:52:54.434087949Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:53:00.466652134Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:53:01.420554262Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"My rice pudding."}
+2025-11-17T07:53:01.420561226Z [inf]  💬 Stored message: user - My rice pudding....
+2025-11-17T07:53:01.420570086Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"My rice pudding."}
+2025-11-17T07:53:02.468082732Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Keto rice pudding sounds intriguing!"}
+2025-11-17T07:53:02.468142294Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Keto rice pudding sounds intriguing!"}
+2025-11-17T07:53:02.468151832Z [inf]  💬 Stored message: ai - Keto rice pudding sounds intriguing!...
+2025-11-17T07:53:04.844386364Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"How do you make it?"}
+2025-11-17T07:53:04.857805059Z [inf]  💬 Stored message: ai - How do you make it?...
+2025-11-17T07:53:04.857814442Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"How do you make it?"}
+2025-11-17T07:53:04.857819721Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:53:08.096635278Z [inf]  🛑 Twilio stop event
+2025-11-17T07:53:08.119291647Z [inf]  💾 Session f9d2fc62-0daf-4d15-a1ed-8fe4e13172a9 ended and saved
+2025-11-17T07:53:15.483340231Z [err]  2025-11-17 07:53:10.898 UTC [76] LOG:  checkpoint starting: time
+2025-11-17T07:53:15.483347332Z [err]  2025-11-17 07:53:12.125 UTC [76] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.206 s, sync=0.011 s, total=1.227 s; sync files=12, longest=0.011 s, average=0.001 s; distance=25 kB, estimate=109 kB; lsn=0/19AA3A0, redo lsn=0/19AA348
+2025-11-17T07:53:28.108414995Z [inf]  📨 Deepgram message: {"type":"Error","description":"We waited too long for a websocket message. Please ensure that you're sending binary messages containing user speech.","code":"CLIENT_MESSAGE_TIMEOUT"}
+2025-11-17T07:54:38.003323824Z [inf]  📞 WebSocket connection established on path: /twilio
+2025-11-17T07:54:38.003333862Z [inf]  📱 twilio_receiver started
+2025-11-17T07:54:38.003341764Z [inf]  ✅ Twilio connected
+2025-11-17T07:54:38.003347291Z [inf]  🚀 Received Twilio start event
+2025-11-17T07:54:38.003359695Z [inf]  📱 Updated caller info from parameters: +61412247247
+2025-11-17T07:54:38.003366501Z [inf]  🔗 Stream ID: MZ1f1f55b324c513cadf73b60e465666d9
+2025-11-17T07:54:38.003372268Z [inf]  ☎️ Actual Call SID: CAb8399e0115d1e402cf5faf62a681a583
+2025-11-17T07:54:38.003378033Z [inf]  💾 Loaded caller context - Session 5
+2025-11-17T07:54:38.003421948Z [inf]  🌐 Request: POST /webhook/voice from 100.64.0.5
+2025-11-17T07:54:38.003426631Z [inf]  🎯 Voice webhook: Call from +61412247247, CallSid: CAb8399e0115d1e402cf5faf62a681a583
+2025-11-17T07:54:38.003431294Z [inf]  🔗 Connecting to WebSocket: wss://voice-bridge-backend-production.up.railway.app/twilio
+2025-11-17T07:54:38.003435521Z [inf]  ✅ Response: POST /webhook/voice -> 200
+2025-11-17T07:54:38.003440069Z [inf]  🌐 Request: GET /twilio from 100.64.0.6
+2025-11-17T07:54:38.003445077Z [inf]  🔍 WEBSOCKET DEBUG: Incoming connection from 100.64.0.6
+2025-11-17T07:54:38.003449300Z [inf]  🔍 Headers: {'Host': 'voice-bridge-backend-production.up.railway.app', 'User-Agent': 'Twilio.TmeWs/1.0', 'Connection': 'Upgrade', 'Sec-WebSocket-Key': 'HnkcQQE5qRqj+KSNceUEPA==', 'Sec-WebSocket-Version': '13', 'Upgrade': 'websocket', 'X-Forwarded-For': '54.84.253.144', 'X-Forwarded-Host': 'voice-bridge-backend-production.up.railway.app', 'X-Forwarded-Proto': 'https', 'X-Railway-Edge': 'railway/us-east4-eqdc4a', 'X-Railway-Request-Id': 'Nzb3zN1mR3u9RCVbPvyhXg', 'X-Real-Ip': '54.84.253.144', 'X-Request-Start': '1763366068678', 'X-Twilio-Signature': 'rXvPEkPetd5bm3+VAXLMlRWqRvM=', 'Accept-Encoding': 'gzip'}
+2025-11-17T07:54:38.003453918Z [inf]  🔍 Query params: {}
+2025-11-17T07:54:38.010923628Z [inf]  📚 Found 4 previous sessions
+2025-11-17T07:54:38.010929618Z [inf]  🧠 AI prompt enhanced with caller context
+2025-11-17T07:54:38.010935280Z [inf]  ⚙️ Configuration sent to Deepgram with caller context
+2025-11-17T07:54:38.010941799Z [inf]  🎤 sts_sender started
+2025-11-17T07:54:38.010949648Z [inf]  🔊 sts_receiver started
+2025-11-17T07:54:38.010955357Z [inf]  🌊 Got stream ID: MZ1f1f55b324c513cadf73b60e465666d9
+2025-11-17T07:54:38.010961147Z [inf]  📨 Deepgram message: {"type":"Welcome","request_id":"0872dc61-5aca-461e-98d5-f5192ab0eab1"}
+2025-11-17T07:54:38.010967281Z [inf]  📨 Deepgram message: {"type":"SettingsApplied"}
+2025-11-17T07:54:38.010972938Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T07:54:38.010978635Z [inf]  💬 Stored message: ai - Hello! How can I help you today?...
+2025-11-17T07:54:38.010984864Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Hello! How can I help you today?"}
+2025-11-17T07:54:38.010990990Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:54:38.010996628Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:54:38.011002555Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"Do you remember what we talked about last time?"}
+2025-11-17T07:54:38.011008119Z [inf]  💬 Stored message: user - Do you remember what we talked about last time?...
+2025-11-17T07:54:38.011013807Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"Do you remember what we talked about last time?"}
+2025-11-17T07:54:38.011020053Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Yes, we covered a few different topics!"}
+2025-11-17T07:54:38.011025952Z [inf]  💬 Stored message: ai - Yes, we covered a few different topics!...
+2025-11-17T07:54:38.011157950Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Yes, we covered a few different topics!"}
+2025-11-17T07:54:38.011163557Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Was there something specific you wanted to revisit from our last chat?"}
+2025-11-17T07:54:38.011168820Z [inf]  💬 Stored message: ai - Was there something specific you wanted to revisit...
+2025-11-17T07:54:38.011174560Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Was there something specific you wanted to revisit from our last chat?"}
+2025-11-17T07:54:38.011181244Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:54:43.828855913Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:54:45.490683223Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"What did we talk about? What topics?"}
+2025-11-17T07:54:45.490688470Z [inf]  💬 Stored message: user - What did we talk about? What topics?...
+2025-11-17T07:54:45.490693950Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"What did we talk about? What topics?"}
+2025-11-17T07:54:46.531001085Z [inf]  💬 Stored message: ai - Last time, we touched on some personal goals and y...
+2025-11-17T07:54:46.531013735Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Last time, we touched on some personal goals and your recent hobbies."}
+2025-11-17T07:54:46.531203386Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Last time, we touched on some personal goals and your recent hobbies."}
+2025-11-17T07:54:49.985395933Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Did anything new come up since then?"}
+2025-11-17T07:54:49.985401156Z [inf]  💬 Stored message: ai - Did anything new come up since then?...
+2025-11-17T07:54:49.985405899Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Did anything new come up since then?"}
+2025-11-17T07:54:49.985410456Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:54:54.557643855Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:54:56.113284409Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"What were my personal goals?"}
+2025-11-17T07:54:56.113304037Z [inf]  💬 Stored message: user - What were my personal goals?...
+2025-11-17T07:54:56.113312423Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"What were my personal goals?"}
+2025-11-17T07:54:57.385462965Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"You mentioned wanting to focus on improving your fitness and maybe picking up a new skill."}
+2025-11-17T07:54:57.385470190Z [inf]  💬 Stored message: ai - You mentioned wanting to focus on improving your f...
+2025-11-17T07:54:57.385474647Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"You mentioned wanting to focus on improving your fitness and maybe picking up a new skill."}
+2025-11-17T07:55:01.905758577Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"How's that going for you?"}
+2025-11-17T07:55:01.905769511Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:55:01.905866063Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"How's that going for you?"}
+2025-11-17T07:55:01.905869905Z [inf]  💬 Stored message: ai - How's that going for you?...
+2025-11-17T07:55:05.968433742Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:55:05.968438478Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"And what"}
+2025-11-17T07:55:05.968443337Z [inf]  💬 Stored message: user - And what...
+2025-11-17T07:55:05.968447879Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"And what"}
+2025-11-17T07:55:06.960602803Z [inf]  📨 Deepgram message: {"type":"UserStartedSpeaking"}
+2025-11-17T07:55:07.310912537Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"user","content":"hobbies did we talk about?"}
+2025-11-17T07:55:07.313555116Z [inf]  💬 Stored message: user - hobbies did we talk about?...
+2025-11-17T07:55:07.313562557Z [inf]  📨 Deepgram message: {"type":"History","role":"user","content":"hobbies did we talk about?"}
+2025-11-17T07:55:08.435733231Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"You talked about getting into painting and trying out some cooking recipes."}
+2025-11-17T07:55:08.435739183Z [inf]  💬 Stored message: ai - You talked about getting into painting and trying ...
+2025-11-17T07:55:08.435743909Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"You talked about getting into painting and trying out some cooking recipes."}
+2025-11-17T07:55:12.279401990Z [inf]  📨 Deepgram message: {"type":"ConversationText","role":"assistant","content":"Have you had a chance to explore those more?"}
+2025-11-17T07:55:12.279416901Z [inf]  💬 Stored message: ai - Have you had a chance to explore those more?...
+2025-11-17T07:55:12.279422475Z [inf]  📨 Deepgram message: {"type":"History","role":"assistant","content":"Have you had a chance to explore those more?"}
+2025-11-17T07:55:12.279427878Z [inf]  📨 Deepgram message: {"type":"AgentAudioDone"}
+2025-11-17T07:55:18.609759827Z [inf]  🛑 Twilio stop event
+2025-11-17T07:55:18.609770644Z [inf]  💾 Session f1c01c14-2391-4e13-b001-1d29ed8aa554 ended and saved
+2025-11-17T07:55:48.370323850Z [inf]  📨 Deepgram message: {"type":"Error","description":"We waited too long for a websocket message. Please ensure that you're sending binary messages containing user speech.","code":"CLIENT_MESSAGE_TIMEOUT"}
