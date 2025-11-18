@@ -81,8 +81,7 @@ async def voice_webhook_handler(request):
             'type': 'call_started',
             'call_sid': call_sid,
             'caller_phone': caller_phone,
-            'session_id': str(session_id) if session_id else None,  # <-- Add this if session_id exists
-            'timestamp': time.time()
+               'timestamp': time.time()
         })
         
         # Build WebSocket URL (same format as working direct TwiML)
@@ -548,7 +547,11 @@ Examples:
     function addActiveClient(callData) {
       const activeClients = document.getElementById('activeClients');
       callStartTime[callData.call_sid] = Date.now();
-      
+      // Check if client already exists to prevent duplicates
+const existingClient = document.querySelector(`[data-call-sid="${callData.call_sid}"]`);
+if (existingClient) {
+    return; // Don't add duplicates
+}
       const clientElement = document.createElement('div');
       clientElement.className = 'client';
       clientElement.dataset.callSid = callData.call_sid;
@@ -1009,7 +1012,7 @@ Remember: Only refer to what this caller actually said in previous conversations
                                                 'role': db_role,
                                                 'content': content,
                                                 'timestamp': time.time()
-                                        })
+                                            })
                                         except Exception as e:
                                             print(f"Error broadcasting to dashboard: {e}")
                                             
