@@ -1,0 +1,73 @@
+2025-11-18T07:05:44.000000000Z [inf]  Starting Container
+2025-11-18T07:05:44.990948666Z [inf]  💬 AI memory with comprehensive debug logging enabled!
+2025-11-18T07:05:44.990956573Z [inf]  🚀 Starting LOGOS AI Server with Dashboard on port 5000
+2025-11-18T07:05:44.990967502Z [inf]  🗑️ Use /cleanup endpoint for bulk database operations
+2025-11-18T07:05:44.990970822Z [inf]  🔍 Health check endpoint: http://0.0.0.0:5000/health
+2025-11-18T07:05:44.990979481Z [inf]  📞 Voice webhook: http://0.0.0.0:5000/webhook/voice
+2025-11-18T07:05:44.990983731Z [inf]  🖥️ Human Guidance Dashboard available at /dashboard
+2025-11-18T07:05:44.991001806Z [inf]  🔌 WebSocket endpoint: ws://0.0.0.0:5000/twilio
+2025-11-18T07:05:44.991015370Z [inf]  🗑️ Cleanup endpoint: http://0.0.0.0:5000/cleanup
+2025-11-18T07:05:44.991023417Z [inf]  🖥️ Dashboard: http://0.0.0.0:5000/dashboard
+2025-11-18T07:05:44.991034423Z [inf]  📡 Dashboard WebSocket: ws://0.0.0.0:5000/dashboard-ws
+2025-11-18T07:05:44.991042393Z [inf]  ✅ DEEPGRAM_API_KEY found in environment
+2025-11-18T07:05:44.991051048Z [inf]  Database tables created successfully
+2025-11-18T07:05:44.991057545Z [inf]  Database connected successfully
+2025-11-18T07:05:44.991066524Z [inf]  Database tables created successfully
+2025-11-18T07:05:44.991072860Z [inf]  🌟 Server running on 0.0.0.0:5000
+2025-11-18T07:05:44.991078843Z [inf]  🎯 Server is ready to accept connections
+2025-11-18T07:05:45.901523955Z [inf]  🌐 Request: GET /health from 100.64.0.2
+2025-11-18T07:05:45.901528435Z [inf]  ✅ Response: GET /health -> 200
+2025-11-18T07:05:50.748768066Z [inf]  Received signal 15 from Railway
+2025-11-18T07:05:50.748777913Z [inf]  Railway sent SIGTERM - but health checks are passing!
+2025-11-18T07:05:50.748784222Z [inf]  Ignoring SIGTERM to keep server running (Railway may be testing)
+2025-11-18T07:05:52.000000000Z [inf]  Stopping Container
+2025-11-18T07:06:05.618004529Z [inf]  🌐 Request: GET /dashboard-ws from 100.64.0.3
+2025-11-18T07:06:05.618010256Z [inf]  🖥️ Dashboard connected. Total dashboards: 1
+2025-11-18T07:06:11.001238665Z [inf]  🌐 Request: GET /dashboard from 100.64.0.4
+2025-11-18T07:06:11.001246862Z [inf]  ✅ Response: GET /dashboard -> 200
+2025-11-18T07:06:11.326583473Z [inf]  🖥️ Dashboard disconnected. Remaining: 0
+2025-11-18T07:06:11.326591774Z [inf]  ✅ Response: GET /dashboard-ws -> 101
+2025-11-18T07:06:12.321859697Z [inf]  🌐 Request: GET /dashboard-ws from 100.64.0.4
+2025-11-18T07:06:12.321866392Z [inf]  🖥️ Dashboard connected. Total dashboards: 1
+2025-11-18T07:06:20.555028953Z [inf]  🌐 Request: POST /webhook/voice from 100.64.0.5
+2025-11-18T07:06:20.555034796Z [inf]  🎯 Voice webhook: Call from +61412247247, CallSid: CAd4c7d1d37fc1f194c4a4b04f8d6b825f
+2025-11-18T07:06:20.555040112Z [inf]  🔗 Connecting to WebSocket: wss://voice-bridge-backend-production.up.railway.app/twilio
+2025-11-18T07:06:20.555045290Z [inf]  ✅ Response: POST /webhook/voice -> 200
+2025-11-18T07:06:21.105112560Z [inf]  🌐 Request: GET /twilio from 100.64.0.6
+2025-11-18T07:06:21.105117606Z [inf]  🔌 WebSocket connection established
+2025-11-18T07:06:21.157024037Z [inf]  🔗 Connected to Deepgram Voice Agent
+2025-11-18T07:06:21.157033175Z [inf]  ⚙️ Deepgram configuration sent
+2025-11-18T07:06:21.157040480Z [inf]  🎤 sts_sender started
+2025-11-18T07:06:21.157046884Z [inf]  🔊 sts_receiver started
+2025-11-18T07:06:21.157051543Z [inf]  📥 twilio_receiver started
+2025-11-18T07:06:21.157056514Z [inf]  🌊 Media stream connected
+2025-11-18T07:06:21.157062514Z [inf]  🎬 Call started with CallSid: CAd4c7d1d37fc1f194c4a4b04f8d6b825f
+2025-11-18T07:06:21.157067905Z [inf]  📞 Caller identified as: +61412247247
+2025-11-18T07:06:21.157072465Z [inf]  📝 Session ID created: session_CAd4c7d1d37fc1f194c4a4b04f8d6b825f
+2025-11-18T07:06:21.157076881Z [inf]  🧠 No context loaded (database session creation skipped)
+2025-11-18T07:06:21.157081822Z [inf]  🌊 Got stream ID: unknown
+2025-11-18T07:06:21.157087565Z [inf]  📨 Deepgram message: {"type":"Welcome","request_id":"e299c496-ad4f-4a00-806f-3ab99bcf01fa"}
+2025-11-18T07:06:21.163899149Z [inf]  📨 Deepgram message: {"type":"Error","description":"Text message received from client did not match any of the formats we expect.","code":"UNPARSABLE_CLIENT_MESSAGE"}
+2025-11-18T07:06:21.170417618Z [inf]  Error in sts_sender: received 1005 (no status code [internal]); then sent 1005 (no status code [internal])
+2025-11-18T07:06:36.702234214Z [err]  2025-11-18 07:06:32.956 UTC [11390] LOG:  could not receive data from client: Connection reset by peer
+2025-11-18T07:06:40.754728737Z [inf]  Database tables created successfully
+2025-11-18T07:06:40.754736822Z [inf]  🌐 Request: GET /dashboard-ws from 100.64.0.2
+2025-11-18T07:06:40.754738010Z [inf]  🌟 Server running on 0.0.0.0:5000
+2025-11-18T07:06:40.754746396Z [inf]  🎯 Server is ready to accept connections
+2025-11-18T07:06:40.754750403Z [inf]  🖥️ Dashboard connected. Total dashboards: 1
+2025-11-18T07:06:40.754755236Z [inf]  💬 AI memory with comprehensive debug logging enabled!
+2025-11-18T07:06:40.754764797Z [inf]  🗑️ Use /cleanup endpoint for bulk database operations
+2025-11-18T07:06:40.754771617Z [inf]  🛑 Call ended
+2025-11-18T07:06:40.754772084Z [inf]  🚀 Starting LOGOS AI Server with Dashboard on port 5000
+2025-11-18T07:06:40.754777568Z [inf]  🖥️ Human Guidance Dashboard available at /dashboard
+2025-11-18T07:06:40.754780458Z [inf]  Server shutdown complete
+2025-11-18T07:06:40.754789956Z [inf]  🔍 Health check endpoint: http://0.0.0.0:5000/health
+2025-11-18T07:06:40.754790143Z [inf]  🖥️ Dashboard disconnected. Remaining: 0
+2025-11-18T07:06:40.754800206Z [inf]  📞 Voice webhook: http://0.0.0.0:5000/webhook/voice
+2025-11-18T07:06:40.754807892Z [inf]  🔌 WebSocket endpoint: ws://0.0.0.0:5000/twilio
+2025-11-18T07:06:40.754814510Z [inf]  🗑️ Cleanup endpoint: http://0.0.0.0:5000/cleanup
+2025-11-18T07:06:40.754846356Z [inf]  🖥️ Dashboard: http://0.0.0.0:5000/dashboard
+2025-11-18T07:06:40.754853784Z [inf]  📡 Dashboard WebSocket: ws://0.0.0.0:5000/dashboard-ws
+2025-11-18T07:06:40.754862840Z [inf]  ✅ DEEPGRAM_API_KEY found in environment
+2025-11-18T07:06:40.754870263Z [inf]  Database tables created successfully
+2025-11-18T07:06:40.754880397Z [inf]  Database connected successfully
