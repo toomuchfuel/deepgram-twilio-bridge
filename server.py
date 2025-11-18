@@ -85,17 +85,17 @@ async def voice_webhook_handler(request):
             'timestamp': time.time()
         })
         
-        # Build WebSocket URL (same format as working direct TwiML)
+        # Build WebSocket URL - use the SAME host as the request
         host = request.host
         websocket_url = f"wss://{host}/twilio"
         
         print(f"🔗 Connecting to WebSocket: {websocket_url}")
         
-        # Return EXACT same TwiML format as working version
+        # FIXED: Use the correct host instead of hardcoded URL
         twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
-        <Stream url="wss://voice-bridge-backend-production.up.railway.app/twilio">
+        <Stream url="{websocket_url}">
             <Parameter name="caller" value="{caller_phone}"/>
             <Parameter name="callsid" value="{call_sid}"/>
         </Stream>
@@ -115,7 +115,6 @@ async def voice_webhook_handler(request):
             content_type='application/xml'
         )
 
-# [Previous format_actual_conversation_context function remains the same]
 def format_actual_conversation_context(recent_sessions):
     """Format actual conversation content for AI context instead of generic summaries"""
     print(f"🔍 DEBUG: Formatting context for {len(recent_sessions)} sessions")
@@ -214,6 +213,20 @@ async def dashboard_websocket_handler(request):
                 'type': 'active_sessions',
                 'sessions': list(active_sessions.keys())
             }))
+        
+        # Send mock inactive clients on connection
+        mock_inactive_clients = [
+            {"id": "I582298", "name": "Karen R.", "flag": "Distressed", "calls": 5, "avg": 31, "last": "17m", "progress": 24, "health": "High Risk"},
+            {"id": "P495337", "name": "Joshua B.", "flag": "Casual", "calls": 9, "avg": 41, "last": "5m", "progress": 57, "health": "Stable"},
+            {"id": "S224021", "name": "Priya K.", "flag": "Casual", "calls": 5, "avg": 40, "last": "38m", "progress": 64, "health": "Stable"},
+            {"id": "A410956", "name": "Emma T.", "flag": "Distressed", "calls": 8, "avg": 24, "last": "27d", "progress": 27, "health": "High Risk"},
+            {"id": "P661408", "name": "Ravi D.", "flag": "Intense", "calls": 10, "avg": 44, "last": "22d", "progress": 53, "health": "Caution"},
+        ]
+        
+        await ws.send_str(json.dumps({
+            'type': 'inactive_clients',
+            'clients': mock_inactive_clients
+        }))
         
         # Handle incoming dashboard messages
         async for msg in ws:
@@ -365,24 +378,24 @@ async def dashboard_handler(request):
   </div>
 
   <div class="layout" id="layout">
-    <!-- Active Clients Column -->
-    <div class="col" id="active-col" style="grid-column:1;grid-row:1;">
-      <h2>Active Calls <span id="activeCount" class="count">(0)</span></h2>
-      <p class="legend">Live conversations requiring guidance</p>
-      <div id="activeClients">
-        <!-- Active clients populated by JavaScript -->
+    <!-- CORRECTED: Inactive Clients Column (Left) -->
+    <div class="col" id="inactive-col" style="grid-column:1;grid-row:1;">
+      <h2>Inactive Clients <span id="inactiveCount" class="count">(0)</span></h2>
+      <p class="legend">Format: <strong>Name</strong> <span class="id">• RegionID</span> — flags & stats</p>
+      <div id="inactiveClients">
+        <!-- Inactive clients populated by JavaScript -->
       </div>
     </div>
 
     <!-- Vertical Resizer -->
     <div class="resizer v" data-col="1"></div>
 
-    <!-- Inactive Clients Column -->
-    <div class="col" id="inactive-col" style="grid-column:3;grid-row:1;">
-      <h2>Recent Clients <span id="inactiveCount" class="count">(0)</span></h2>
-      <p class="legend">Previous callers and session history</p>
-      <div id="inactiveClients">
-        <!-- Inactive clients populated by JavaScript -->
+    <!-- CORRECTED: Active Clients Column (Middle) -->
+    <div class="col" id="active-col" style="grid-column:3;grid-row:1;">
+      <h2>Active Calls <span id="activeCount" class="count">(0)</span></h2>
+      <p class="legend">Live conversations requiring guidance</p>
+      <div id="activeClients">
+        <!-- Active clients populated by JavaScript -->
       </div>
     </div>
 
@@ -443,6 +456,7 @@ Examples:
     // WebSocket connection for real-time updates
     let ws = null;
     let selectedSession = null;
+    let callStartTime = {};
     
     function connectWebSocket() {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -511,13 +525,67 @@ Examples:
         case 'active_sessions':
           updateActiveSessions(data.sessions);
           break;
+        case 'inactive_clients':
+          loadInactiveClients(data.clients);
+          break;
         default:
           console.log('Unknown message type:', data.type);
       }
     }
     
+    function loadInactiveClients(clients) {
+      const inactiveClients = document.getElementById('inactiveClients');
+      inactiveClients.innerHTML = '';
+      
+      clients.forEach(client => {
+        const clientElement = document.createElement('div');
+        clientElement.className = 'client';
+        clientElement.dataset.clientId = client.id;
+        clientElement.innerHTML = `
+          <div class="top">
+            <div class="name">${client.name}<span class="id"> • ${client.id}</span></div>
+            <span class="chip ${client.flag.toLowerCase()}">${client.flag}</span>
+          </div>
+          <div class="meta">
+            <span>${client.calls} calls</span><span>avg ${client.avg}m</span><span>last: ${client.last}</span>
+          </div>
+          <div class="bar"><span style="width:${client.progress}%"></span></div>
+        `;
+        
+        clientElement.addEventListener('click', () => selectInactiveClient(client));
+        inactiveClients.appendChild(clientElement);
+      });
+      
+      document.getElementById('inactiveCount').textContent = `(${clients.length})`;
+    }
+    
+    function selectInactiveClient(client) {
+      // Update UI to show selected inactive client
+      document.querySelectorAll('#inactive-col .client').forEach(c => c.classList.remove('selected'));
+      document.querySelector(`[data-client-id="${client.id}"]`).classList.add('selected');
+      
+      // Update session info
+      document.getElementById('liveName').textContent = client.name;
+      document.getElementById('liveId').textContent = client.id;
+      document.getElementById('stat-duration').textContent = 'Duration: --';
+      document.getElementById('stat-total').textContent = `Total calls: ${client.calls}`;
+      document.getElementById('stat-avg').textContent = `Avg: ${client.avg}m`;
+      document.getElementById('stat-health').textContent = client.health;
+      document.getElementById('stat-progress').textContent = `Progress: ${client.progress}%`;
+      
+      // Show placeholder transcript for inactive client
+      document.getElementById('transcript').innerHTML = `
+        <div class="msg" style="text-align:center;color:#6b7280;padding:40px;">
+          Historical session data for ${client.name}<br>
+          <small>Select an active call to view live transcript</small>
+        </div>
+      `;
+    }
+    
     function addActiveClient(callData) {
       const activeClients = document.getElementById('activeClients');
+      callStartTime[callData.call_sid] = Date.now();
+      
       const clientElement = document.createElement('div');
       clientElement.className = 'client';
       clientElement.dataset.callSid = callData.call_sid;
@@ -527,14 +595,19 @@ Examples:
           <span class="chip live">LIVE</span>
         </div>
         <div class="meta">
-          <span>Active now</span><span>Duration: 0m</span>
+          <span>Active now</span><span class="duration">Duration: 0m 0s</span>
         </div>
       `;
       
-      clientElement.addEventListener('click', () => selectSession(callData.call_sid));
+      clientElement.addEventListener('click', () => selectSession(callData.call_sid, callData.caller_phone));
       activeClients.appendChild(clientElement);
       
       updateActiveCount();
+      
+      // Auto-select the first active call
+      if (document.querySelectorAll('#activeClients .client').length === 1) {
+        selectSession(callData.call_sid, callData.caller_phone);
+      }
     }
     
     function removeActiveClient(callSid) {
@@ -542,6 +615,7 @@ Examples:
       if (clientElement) {
         clientElement.remove();
         updateActiveCount();
+        delete callStartTime[callSid];
       }
     }
     
@@ -550,15 +624,44 @@ Examples:
       document.getElementById('activeCount').textContent = `(${activeCount})`;
     }
     
-    function selectSession(callSid) {
+    function selectSession(callSid, callerPhone) {
       selectedSession = callSid;
       // Update UI to show selected session
       document.querySelectorAll('.client').forEach(c => c.classList.remove('selected'));
       document.querySelector(`[data-call-sid="${callSid}"]`).classList.add('selected');
       
       // Update session info
-      document.getElementById('liveName').textContent = callSid.slice(-6);
+      document.getElementById('liveName').textContent = callerPhone;
       document.getElementById('liveId').textContent = callSid;
+      
+      // Clear transcript for new selection
+      document.getElementById('transcript').innerHTML = `
+        <div class="msg" style="text-align:center;color:#6b7280;padding:20px;">
+          Live transcript will appear here once conversation starts...
+        </div>
+      `;
+    }
+    
+    function updateTranscript(data) {
+      if (selectedSession !== data.call_sid) return;
+      
+      const transcript = document.getElementById('transcript');
+      
+      // Clear placeholder if this is the first message
+      if (transcript.children.length === 1 && transcript.children[0].style.textAlign === 'center') {
+        transcript.innerHTML = '';
+      }
+      
+      const msgElement = document.createElement('div');
+      msgElement.className = `msg ${data.role}`;
+      const time = new Date().toLocaleTimeString();
+      msgElement.innerHTML = `
+        <div class="time">${time} • ${data.role.toUpperCase()}</div>
+        ${data.content}
+      `;
+      
+      transcript.appendChild(msgElement);
+      transcript.scrollTop = transcript.scrollHeight;
     }
     
     function sendGuidance() {
@@ -583,6 +686,19 @@ Examples:
       document.getElementById('guidanceText').value = '';
     }
     
+    // Update call durations every second
+    setInterval(() => {
+      Object.keys(callStartTime).forEach(callSid => {
+        const element = document.querySelector(`[data-call-sid="${callSid}"] .duration`);
+        if (element) {
+          const elapsed = Math.floor((Date.now() - callStartTime[callSid]) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          element.textContent = `Duration: ${minutes}m ${seconds}s`;
+        }
+      });
+    }, 1000);
+    
     // Event listeners
     document.getElementById('sendGuidanceBtn').addEventListener('click', sendGuidance);
     
@@ -594,8 +710,6 @@ Examples:
     '''
     
     return web.Response(text=dashboard_html, content_type='text/html')
-
-# [Rest of your existing handler functions remain the same...]
 
 async def bulk_cleanup_handler(request):
     """HTTP endpoint for bulk cleanup operations"""
@@ -690,8 +804,6 @@ Phone formats supported: +61412345678, 0412345678, 61412345678, 412345678
     except Exception as e:
         print(f"Error in bulk cleanup: {e}")
         return web.Response(text=f"Error: {e}", status=500)
-
-# [Include your existing websocket_handler function with modifications to broadcast to dashboard]
 
 async def websocket_handler(request):
     """Handle Twilio WebSocket connections for voice processing"""
@@ -811,7 +923,7 @@ async def websocket_handler(request):
                 "think": {
                     "provider": {"type": VOICE_MODEL},
                     "model": LLM_MODEL,
-                    "instructions": VOICE_AGENT_PERSONALITY + "\n\nIf human guidance is provided, prioritize following the guidance while maintaining your empathetic tone."
+                    "instructions": VOICE_AGENT_PERSONALITY
                 },
                 "speak": {
                     "model": VOICE_MODEL
@@ -823,6 +935,7 @@ async def websocket_handler(request):
         if session_id in human_guidance_queue:
             guidance = human_guidance_queue[session_id]
             deepgram_config["agent"]["think"]["instructions"] += f"\n\nHUMAN GUIDANCE: {guidance['guidance']}"
+            print(f"🧠 Including human guidance: {guidance['guidance']}")
             # Remove used guidance
             del human_guidance_queue[session_id]
         
