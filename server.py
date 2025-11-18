@@ -6,141 +6,86 @@ import websockets
 import os
 import signal
 import time
-from aiohttp import web, WSMsgType
+from pathlib import Path
+from aiohttp import web
 from config import VOICE_AGENT_PERSONALITY, VOICE_MODEL, LLM_MODEL, LLM_TEMPERATURE
-from database import LogosDatabase, format_context_for_va
-from aiohttp_cors import setup as cors_setup, ResourceOptions
+from database import LogosDatabase
+# from database import format_context_for_va  # not used now, but keep if you need it
 
-# Global variables
+# ====== GLOBALS ======
 shutdown_event = asyncio.Event()
 db = None  # Database instance
-active_sessions = {}  # Store session data: {call_sid: session_data}
-dashboard_connections = set()  # Track dashboard WebSocket connections
-human_guidance_queue = {}  # Store guidance from human operators: {session_id: guidance_text}
 
+# Active call/session state, keyed by call_sid
+# {
+#   call_sid: {
+#       'caller_phone': '+614...',
+#       'status': 'ringing' | 'active' | 'inactive',
+#       'timestamp': float,
+#       'session_id': UUID or str | None,
+#       'created_at': float,
+#       'ended_at': float | None,
+#       'guidance': [str, ...]
+#   }
+# }
+active_sessions = {}
+
+# All open dashboard websockets
+dashboard_connections = set()
+
+
+# ====== DATABASE INIT ======
 async def initialize_database():
     """Initialize database connection"""
     global db
     try:
         db = LogosDatabase()
         await db.connect()
-        print("Database connected successfully")
-        print("Database tables created successfully")
+        print("✅ Database connected successfully")
+        print("✅ Database tables created successfully")
     except Exception as e:
-        print(f"Database connection failed: {e}")
-        # Continue without database for now
+        print(f"⚠️ Database connection failed: {e}")
         db = None
 
+
+# ====== DEEPGRAM CONNECTOR ======
 def sts_connect():
     """Connect to Deepgram Voice Agent API"""
     api_key = os.getenv('DEEPGRAM_API_KEY')
     if not api_key:
         raise ValueError("DEEPGRAM_API_KEY environment variable is not set")
 
-    sts_ws = websockets.connect(
+    return websockets.connect(
         "wss://agent.deepgram.com/v1/agent/converse",
         subprotocols=["token", api_key]
     )
-    return sts_ws
 
-async def broadcast_to_dashboards(message):
-    """Send message to all connected dashboard clients"""
-    if not dashboard_connections:
-        return
-    
-    disconnected = set()
-    for ws in dashboard_connections.copy():
-        try:
-            await ws.send_str(json.dumps(message))
-        except ConnectionResetError:
-            disconnected.add(ws)
-        except Exception as e:
-            print(f"Error broadcasting to dashboard: {e}")
-            disconnected.add(ws)
-    
-    # Remove disconnected clients
-    dashboard_connections.difference_update(disconnected)
 
-async def voice_webhook_handler(request):
-    """Handle initial Twilio voice webhook and capture caller info"""
-    try:
-        form_data = await request.post()
-        caller_phone = form_data.get('From', 'unknown')
-        call_sid = form_data.get('CallSid', 'unknown')
-        
-        print(f"🎯 Voice webhook: Call from {caller_phone}, CallSid: {call_sid}")
-        
-        # Store caller info for WebSocket to retrieve
-        active_sessions[call_sid] = {
-            'caller_phone': caller_phone,
-            'timestamp': time.time(),
-            'status': 'incoming'
-        }
-        
-        # Notify dashboard of incoming call
-        await broadcast_to_dashboards({
-            'type': 'call_started',
-            'call_sid': call_sid,
-            'caller_phone': caller_phone,
-            'timestamp': time.time()
-        })
-        
-        # Build WebSocket URL - use the SAME host as the request
-        host = request.host
-        websocket_url = f"wss://{host}/twilio"
-        
-        print(f"🔗 Connecting to WebSocket: {websocket_url}")
-        
-        # FIXED: Use the correct host instead of hardcoded URL
-        twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Connect>
-        <Stream url="{websocket_url}">
-            <Parameter name="caller" value="{caller_phone}"/>
-            <Parameter name="callsid" value="{call_sid}"/>
-        </Stream>
-    </Connect>
-</Response>'''
-        
-        return web.Response(text=twiml_response, content_type='application/xml')
-    
-    except Exception as e:
-        print(f"Error in voice webhook: {e}")
-        # Fallback TwiML
-        return web.Response(
-            text='''<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say>Sorry, there was a connection error. Please try calling again.</Say>
-</Response>''',
-            content_type='application/xml'
-        )
-
+# ====== MEMORY CONTEXT FORMATTER ======
 def format_actual_conversation_context(recent_sessions):
-    """Format actual conversation content for AI context instead of generic summaries"""
+    """Format actual conversation content for AI context instead of generic summaries."""
     print(f"🔍 DEBUG: Formatting context for {len(recent_sessions)} sessions")
-    
+
     context_parts = []
-    
-    for i, session_data in enumerate(recent_sessions[-3:]):  # Last 3 sessions only
+
+    for i, session_data in enumerate(recent_sessions[-3:]):  # Last 3 sessions
         session_num = session_data.get('session_number', 'Unknown')
         transcript = session_data.get('full_transcript', [])
 
-        # 🔧 STEP 1: if transcript is a JSON string, decode it first
+        # STEP 1: decode JSON string if needed
         if isinstance(transcript, str):
             try:
                 decoded = json.loads(transcript)
-                # Some schemas store {"messages": [...]}
                 if isinstance(decoded, dict) and "messages" in decoded:
                     transcript = decoded["messages"]
                 else:
                     transcript = decoded
                 print(f"🔍 DEBUG: Decoded JSON transcript for session {session_num}, type={type(transcript)}")
             except json.JSONDecodeError:
-                # Fall back: treat whole thing as one user message
                 print(f"⚠️ WARNING: Could not JSON-decode transcript for session {session_num}, using raw string")
                 transcript = [{"content": transcript, "speaker": "user"}]
 
-        # 🔧 STEP 2: normalize into list[dict]
+        # STEP 2: normalize to list[dict]
         normalized = []
         for item in transcript:
             if isinstance(item, dict):
@@ -151,936 +96,957 @@ def format_actual_conversation_context(recent_sessions):
                     "speaker": "user"
                 })
         transcript = normalized
-        
+
         print(f"🔍 DEBUG: Session {session_num} has {len(transcript) if transcript else 0} messages after normalization")
-        
-        if transcript:
-            key_exchanges = []
-            for j, msg in enumerate(transcript):
-                content = msg.get('content', '').strip()
-                speaker = msg.get('speaker', '')
-                
-                print(f"🔍 DEBUG: Message {j}: {speaker} - {content[:50]}...")
-                
-                # Skip generic greetings and very short responses
-                if len(content) > 15 and not content.startswith(
-                    ('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')
+
+        if not transcript:
+            continue
+
+        key_exchanges = []
+        for j, msg in enumerate(transcript):
+            content = msg.get('content', '').strip()
+            speaker = msg.get('speaker', '')
+
+            print(f"🔍 DEBUG: Message {j}: {speaker} - {content[:50]}...")
+
+            # Skip generic greetings and very short responses
+            if len(content) > 15 and not content.startswith(
+                ('Hello!', 'Hi!', 'Hey!', 'Yes,', 'Nice!', 'Got it!', 'Oh,', 'Okay!', 'Sure!')
+            ):
+                if speaker == 'user':
+                    key_exchanges.append(f'User said: "{content}"')
+                    print(f"🔍 DEBUG: Added user statement: {content[:30]}...")
+                elif speaker == 'ai' and (
+                    'mentioned' in content or 'talked about' in content or 'remember' in content
                 ):
-                    if speaker == 'user':
-                        key_exchanges.append(f"User said: \"{content}\"")
-                        print(f"🔍 DEBUG: Added user statement: {content[:30]}...")
-                    elif speaker == 'ai' and (
-                        'mentioned' in content or 'talked about' in content or 'remember' in content
-                    ):
-                        # Skip AI's generic memory claims that might be wrong
-                        print(f"🔍 DEBUG: Skipped AI memory claim: {content[:30]}...")
-                        continue
-            
-            if key_exchanges:
-                meaningful_exchanges = key_exchanges[-6:]  # Last 6 meaningful statements
-                session_summary = f"Session {session_num}: " + " | ".join(meaningful_exchanges)
-                context_parts.append(session_summary)
-                print(f"🔍 DEBUG: Session {session_num} summary: {len(meaningful_exchanges)} meaningful exchanges")
-            else:
-                print(f"🔍 DEBUG: Session {session_num} had no meaningful exchanges")
-    
+                    print(f"🔍 DEBUG: Skipped AI memory claim: {content[:30]}...")
+                    continue
+
+        if key_exchanges:
+            meaningful_exchanges = key_exchanges[-6:]  # Last 6 meaningful statements
+            session_summary = f"Session {session_num}: " + " | ".join(meaningful_exchanges)
+            context_parts.append(session_summary)
+            print(f"🔍 DEBUG: Session {session_num} summary: {len(meaningful_exchanges)} meaningful exchanges")
+        else:
+            print(f"🔍 DEBUG: Session {session_num} had no meaningful exchanges")
+
     if context_parts:
         full_context = f"""
 ACTUAL CONVERSATION HISTORY:
 {chr(10).join(context_parts)}
 
 IMPORTANT: Only reference what the user actually said above. Do NOT make up details about hobbies, goals, or activities they never mentioned. If you're not sure about something from previous conversations, ask them to remind you rather than guessing."""
-        
         print(f"🔍 DEBUG: Final context length: {len(full_context)} characters")
         print(f"🔍 DEBUG: Context preview: {full_context[:300]}...")
         return full_context
-    
-    print(f"🔍 DEBUG: No meaningful context found")
+
+    print("🔍 DEBUG: No meaningful context found")
     return ""
 
-async def dashboard_websocket_handler(request):
-    """Handle dashboard WebSocket connections for real-time monitoring"""
-    ws = web.WebSocketResponse()
-    await ws.prepare(request)
-    
-    dashboard_connections.add(ws)
-    print(f"🖥️ Dashboard connected. Total dashboards: {len(dashboard_connections)}")
-    
-    try:
-        # Send current active sessions to new dashboard
-        if active_sessions:
-            await ws.send_str(json.dumps({
-                'type': 'active_sessions',
-                'sessions': list(active_sessions.keys())
-            }))
-        
-        # Send mock inactive clients on connection
-        mock_inactive_clients = [
-            {"id": "I582298", "name": "Karen R.", "flag": "Distressed", "calls": 5, "avg": 31, "last": "17m", "progress": 24, "health": "High Risk"},
-            {"id": "P495337", "name": "Joshua B.", "flag": "Casual", "calls": 9, "avg": 41, "last": "5m", "progress": 57, "health": "Stable"},
-            {"id": "S224021", "name": "Priya K.", "flag": "Casual", "calls": 5, "avg": 40, "last": "38m", "progress": 64, "health": "Stable"},
-            {"id": "A410956", "name": "Emma T.", "flag": "Distressed", "calls": 8, "avg": 24, "last": "27d", "progress": 27, "health": "High Risk"},
-            {"id": "P661408", "name": "Ravi D.", "flag": "Intense", "calls": 10, "avg": 44, "last": "22d", "progress": 53, "health": "Caution"},
-        ]
-        
-        await ws.send_str(json.dumps({
-            'type': 'inactive_clients',
-            'clients': mock_inactive_clients
-        }))
-        
-        # Handle incoming dashboard messages
-        async for msg in ws:
-            if msg.type == WSMsgType.TEXT:
-                try:
-                    data = json.loads(msg.data)
-                    message_type = data.get('type')
-                    
-                    if message_type == 'human_guidance':
-                        # Store guidance from human operator
-                        session_id = data.get('session_id')
-                        guidance = data.get('guidance')
-                        human_guidance_queue[session_id] = {
-                            'guidance': guidance,
-                            'timestamp': time.time()
-                        }
-                        print(f"👤 Human guidance received for session {session_id}: {guidance}")
-                        
-                    elif message_type == 'request_transcript':
-                        # Send transcript for specific session
-                        session_id = data.get('session_id')
-                        if db:
-                            # Fetch transcript from database
-                            # This would be implemented based on your database schema
-                            pass
-                            
-                    elif message_type == 'ping':
-                        await ws.send_str(json.dumps({'type': 'pong'}))
-                        
-                except json.JSONDecodeError:
-                    print(f"Invalid JSON from dashboard: {msg.data}")
-                    
-            elif msg.type == WSMsgType.ERROR:
-                print(f"Dashboard WebSocket error: {ws.exception()}")
-                break
-                
-    except Exception as e:
-        print(f"Dashboard WebSocket error: {e}")
-    finally:
-        dashboard_connections.discard(ws)
-        print(f"🖥️ Dashboard disconnected. Remaining: {len(dashboard_connections)}")
-    
-    return ws
 
-async def get_client_list(request):
-    """HTTP endpoint to get list of clients for dashboard"""
-    if not db:
-        return web.Response(text="Database not available", status=500)
-    
-    try:
-        # This would fetch actual client data from your database
-        # For now, return mock data structure
-        clients = {
-            'active': [],
-            'inactive': []
-        }
-        
-        # You would implement actual database query here
-        # clients = await db.get_client_list()
-        
-        return web.json_response(clients)
-        
-    except Exception as e:
-        print(f"Error fetching client list: {e}")
-        return web.Response(text="Error fetching clients", status=500)
-
-async def dashboard_handler(request):
-    """Serve the dashboard HTML page"""
-    dashboard_html = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LOGOS AI - Human Guidance & Oversight Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Orbitron:wght@800&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#ffffff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--chip:#f3f4f6;--accent:#2563eb;--danger:#ef4444;
-           --col1:320px; --col2:320px; }
-    *{box-sizing:border-box;} html,body{height:100%;} body{margin:0;background:#fff;color:#111;
-      font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial;}
-    .layout{display:grid;grid-template-columns: var(--col1) 6px var(--col2) 6px 1fr;grid-template-rows: 1fr;
-             height:calc(100vh - 58px);overflow:hidden;padding:4px;gap:0;}
-    .resizer.v{width:6px;cursor:col-resize;background:var(--line);}
-    .resizer.v:hover{background:var(--accent);}
-    .col{overflow:auto;padding:12px 8px;background:#fff;margin:4px;border:0.6mm solid var(--accent);border-radius:12px;}
-    .col h2{font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:#6b7280;margin:4px 6px 8px;}
-    .count{color:var(--text);font-weight:700;margin-left:6px;}
-    .legend{font-size:10.5px;color:#6b7280;margin:0 6px 8px;}
-    .client{display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#fff;margin:0;cursor:pointer;}
-    .client + .client{border-top:none;}
-    .client:hover{ box-shadow:0 2px 8px rgba(0,0,0,.05);}
-    .client.selected{outline:2px solid var(--accent);}
-    .top{display:flex;align-items:center;gap:6px;justify-content:space-between;}
-    .name{font-weight:600;font-size:13px;}
-    .id{font-size:11px;color:#6b7280;margin-left:6px;}
-    .chip{padding:2px 6px;border-radius:999px;background:#f3f4f6;color:#111;font-size:11px;border:1px solid var(--line);white-space:nowrap;}
-    .chip.casual{background:#fef9c3;border-color:#fde68a;}
-    .chip.intense{background:#ffedd5;border-color:#fdba74;}
-    .chip.distressed{background:#fee2e2;border-color:#fecaca;}
-    .chip.live{background:#dcfce7;border-color:#bbf7d0;color:#166534;font-weight:600;}
-    .meta{font-size:11px;color:#6b7280;display:flex;gap:8px;flex-wrap:wrap;}
-    .bar{height:4px;border-radius:999px;background:#f3f4f6;overflow:hidden;}
-    .bar > span{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);width:40%;}
-    .right{display:grid;grid-template-rows: var(--rightTop, 60%) 6px 1fr;overflow:hidden;margin:4px;}
-    .pane{padding:16px;border-bottom:none;overflow:auto;background:#fff;border:0.6mm solid var(--accent);border-radius:12px;}
-    .resizer.h{height:6px;cursor:row-resize;background:var(--line);}
-    .resizer.h:hover{background:var(--accent);}
-    .pane h3{margin:0 0 8px;font-size:18px;}
-    .transcript{display:flex;flex-direction:column;gap:12px;max-width:900px;}
-    .msg{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px 12px;font-size:14px;}
-    .msg.ai{border-color:#dbeafe;background:#eff6ff;}
-    .msg.user{border-color:#e4e4e7;background:#fafafa;}
-    .msg .small,.time{font-size:11px;color:#6b7280;margin-bottom:6px;}
-    .stats{display:flex;gap:16px;flex-wrap:wrap;color:#6b7280;font-size:12px;margin:4px 8px 10px;}
-    .instruct-box{display:flex;gap:10px;max-width:900px;}
-    textarea{flex:1;min-height:120px;padding:12px;border-radius:10px;border:1px solid var(--line);
-      font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial;}
-    button{align-self:flex-start;padding:10px 14px;border-radius:10px;border:1px solid var(--accent);background:#2563eb;color:#fff;font-weight:600;cursor:pointer;}
-    .ghost-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--accent);background:#fff;color:#2563eb;font-weight:700;cursor:pointer;}
-    .title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
-    .title-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-    .btns{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
-    .nav-btn{padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;}
-    .nav-btn:hover{box-shadow:0 4px 10px rgba(0,0,0,0.06);}
-    .nav-btn.danger{border-color:#ef4444;color:#ef4444;}
-    .agent-name{font-weight:800;margin-right:6px;}
-    .header{display:flex;gap:12px;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;height:58px;}
-    .header .brand{font-weight:800;letter-spacing:.2px;font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Inter, Ubuntu, 'Helvetica Neue', Arial; font-size:150%;}
-    .header .brand .logo-word{font-family:'Orbitron', system-ui, -apple-system, Segoe UI, Roboto, Inter, Ubuntu, 'Helvetica Neue', Arial; color:#00C6FF; font-weight:800; font-size:200%;}
-    .ready{position:fixed;right:12px;bottom:12px;background:#10b981;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;z-index:9999;box-shadow:0 6px 16px rgba(0,0,0,.2);}
-    .connection-status{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;}
-    .connection-status.connected{background:#dcfce7;color:#166534;}
-    .connection-status.disconnected{background:#fee2e2;color:#dc2626;}
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="brand"><span class="logo-word">LOGOS AI</span> — Human Guidance & Oversight</div>
-    <div class="btns">
-      <div id="connectionStatus" class="connection-status disconnected">Connecting...</div>
-      <span class="agent-name"><strong>Chris Jones — HGI</strong></span>
-      <a class="nav-btn">Logout</a>
-      <a class="nav-btn">Admin</a>
-      <a class="nav-btn">Client Settings</a>
-      <a class="nav-btn danger">Urgent Support</a>
-      <a class="nav-btn">Assignments</a>
-    </div>
-  </div>
-
-  <div class="layout" id="layout">
-    <!-- CORRECTED: Inactive Clients Column (Left) -->
-    <div class="col" id="inactive-col" style="grid-column:1;grid-row:1;">
-      <h2>Inactive Clients <span id="inactiveCount" class="count">(0)</span></h2>
-      <p class="legend">Format: <strong>Name</strong> <span class="id">• RegionID</span> — flags & stats</p>
-      <div id="inactiveClients">
-        <!-- Inactive clients populated by JavaScript -->
-      </div>
-    </div>
-
-    <!-- Vertical Resizer -->
-    <div class="resizer v" data-col="1"></div>
-
-    <!-- CORRECTED: Active Clients Column (Middle) -->
-    <div class="col" id="active-col" style="grid-column:3;grid-row:1;">
-      <h2>Active Calls <span id="activeCount" class="count">(0)</span></h2>
-      <p class="legend">Live conversations requiring guidance</p>
-      <div id="activeClients">
-        <!-- Active clients populated by JavaScript -->
-      </div>
-    </div>
-
-    <!-- Vertical Resizer -->
-    <div class="resizer v" data-col="2"></div>
-
-    <!-- Right Panel -->
-    <div class="right" style="grid-column:5;grid-row:1;">
-      <!-- Live Transcript -->
-      <div class="pane">
-        <div class="title">
-          <div class="title-left">
-            <h3 id="liveName">Select a client</h3>
-            <span id="liveId" style="color:#6b7280;font-size:13px;"></span>
-          </div>
-          <div class="btns">
-            <button class="ghost-btn" id="takeOverBtn">Take Over</button>
-            <button class="ghost-btn">Session History</button>
-          </div>
-        </div>
-        <div class="stats">
-          <span id="stat-duration">Duration: --</span>
-          <span id="stat-total">Total calls: --</span>
-          <span id="stat-avg">Avg: --</span>
-          <span id="stat-health">--</span>
-          <span id="stat-progress">Progress: --%</span>
-        </div>
-        <div id="transcript" class="transcript">
-          <div class="msg" style="text-align:center;color:#6b7280;padding:40px;">
-            Select an active call to view live transcript
-          </div>
-        </div>
-      </div>
-
-      <!-- Horizontal Resizer -->
-      <div class="resizer h"></div>
-
-      <!-- Human Guidance Panel -->
-      <div class="pane">
-        <h3>Human Guidance & Intervention</h3>
-        <div class="instruct-box">
-          <textarea id="guidanceText" placeholder="Type guidance for the AI here... 
-
-Examples:
-- Ask about their sleep patterns
-- Suggest a gentle breathing exercise  
-- Validate their feelings about work stress
-- Guide toward self-reflection on coping strategies"></textarea>
-          <button id="sendGuidanceBtn">Send Guidance</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="ready" class="ready" style="display:none;">Dashboard Ready</div>
-
-  <script>
-    // WebSocket connection for real-time updates
-    let ws = null;
-    let selectedSession = null;
-    let callStartTime = {};
-    
-    function connectWebSocket() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = protocol + '//' + window.location.host + '/dashboard-ws';
-      
-      try {
-        ws = new WebSocket(wsUrl);
-        
-        ws.onopen = function() {
-          console.log('Dashboard WebSocket connected');
-          updateConnectionStatus(true);
-          document.getElementById('ready').style.display = 'block';
-        };
-        
-        ws.onmessage = function(event) {
-          try {
-            const data = JSON.parse(event.data);
-            handleWebSocketMessage(data);
-          } catch (e) {
-            console.error('Error parsing WebSocket message:', e);
-          }
-        };
-        
-        ws.onclose = function() {
-          console.log('Dashboard WebSocket disconnected');
-          updateConnectionStatus(false);
-          document.getElementById('ready').style.display = 'none';
-          // Attempt to reconnect after 3 seconds
-          setTimeout(connectWebSocket, 3000);
-        };
-        
-        ws.onerror = function(error) {
-          console.error('WebSocket error:', error);
-          updateConnectionStatus(false);
-        };
-        
-      } catch (e) {
-        console.error('Error creating WebSocket:', e);
-        updateConnectionStatus(false);
-        setTimeout(connectWebSocket, 3000);
-      }
-    }
-    
-    function updateConnectionStatus(connected) {
-      const statusEl = document.getElementById('connectionStatus');
-      if (connected) {
-        statusEl.textContent = 'Connected';
-        statusEl.className = 'connection-status connected';
-      } else {
-        statusEl.textContent = 'Disconnected';
-        statusEl.className = 'connection-status disconnected';
-      }
-    }
-    
-    function handleWebSocketMessage(data) {
-      switch (data.type) {
-        case 'call_started':
-          addActiveClient(data);
-          break;
-        case 'call_ended':
-          removeActiveClient(data.call_sid);
-          break;
-        case 'transcript_update':
-          updateTranscript(data);
-          break;
-        case 'active_sessions':
-          updateActiveSessions(data.sessions);
-          break;
-        case 'inactive_clients':
-          loadInactiveClients(data.clients);
-          break;
-        default:
-          console.log('Unknown message type:', data.type);
-      }
-    }
-    
-    function loadInactiveClients(clients) {
-      const inactiveClients = document.getElementById('inactiveClients');
-      inactiveClients.innerHTML = '';
-      
-      clients.forEach(client => {
-        const clientElement = document.createElement('div');
-        clientElement.className = 'client';
-        clientElement.dataset.clientId = client.id;
-        clientElement.innerHTML = `
-          <div class="top">
-            <div class="name">${client.name}<span class="id"> • ${client.id}</span></div>
-            <span class="chip ${client.flag.toLowerCase()}">${client.flag}</span>
-          </div>
-          <div class="meta">
-            <span>${client.calls} calls</span><span>avg ${client.avg}m</span><span>last: ${client.last}</span>
-          </div>
-          <div class="bar"><span style="width:${client.progress}%"></span></div>
-        `;
-        
-        clientElement.addEventListener('click', () => selectInactiveClient(client));
-        inactiveClients.appendChild(clientElement);
-      });
-      
-      document.getElementById('inactiveCount').textContent = `(${clients.length})`;
-    }
-    
-    function selectInactiveClient(client) {
-      // Update UI to show selected inactive client
-      document.querySelectorAll('#inactive-col .client').forEach(c => c.classList.remove('selected'));
-      document.querySelector(`[data-client-id="${client.id}"]`).classList.add('selected');
-      
-      // Update session info
-      document.getElementById('liveName').textContent = client.name;
-      document.getElementById('liveId').textContent = client.id;
-      document.getElementById('stat-duration').textContent = 'Duration: --';
-      document.getElementById('stat-total').textContent = `Total calls: ${client.calls}`;
-      document.getElementById('stat-avg').textContent = `Avg: ${client.avg}m`;
-      document.getElementById('stat-health').textContent = client.health;
-      document.getElementById('stat-progress').textContent = `Progress: ${client.progress}%`;
-      
-      // Show placeholder transcript for inactive client
-      document.getElementById('transcript').innerHTML = `
-        <div class="msg" style="text-align:center;color:#6b7280;padding:40px;">
-          Historical session data for ${client.name}<br>
-          <small>Select an active call to view live transcript</small>
-        </div>
-      `;
-    }
-    
-    function addActiveClient(callData) {
-      const activeClients = document.getElementById('activeClients');
-      callStartTime[callData.call_sid] = Date.now();
-      
-      const clientElement = document.createElement('div');
-      clientElement.className = 'client';
-      clientElement.dataset.callSid = callData.call_sid;
-      clientElement.innerHTML = `
-        <div class="top">
-          <div class="name">${callData.caller_phone}<span class="id"> • ${callData.call_sid.slice(-6)}</span></div>
-          <span class="chip live">LIVE</span>
-        </div>
-        <div class="meta">
-          <span>Active now</span><span class="duration">Duration: 0m 0s</span>
-        </div>
-      `;
-      
-      clientElement.addEventListener('click', () => selectSession(callData.call_sid, callData.caller_phone));
-      activeClients.appendChild(clientElement);
-      
-      updateActiveCount();
-      
-      // Auto-select the first active call
-      if (document.querySelectorAll('#activeClients .client').length === 1) {
-        selectSession(callData.call_sid, callData.caller_phone);
-      }
-    }
-    
-    function removeActiveClient(callSid) {
-      const clientElement = document.querySelector(`[data-call-sid="${callSid}"]`);
-      if (clientElement) {
-        clientElement.remove();
-        updateActiveCount();
-        delete callStartTime[callSid];
-      }
-    }
-    
-    function updateActiveCount() {
-      const activeCount = document.querySelectorAll('#activeClients .client').length;
-      document.getElementById('activeCount').textContent = `(${activeCount})`;
-    }
-    
-    function selectSession(callSid, callerPhone) {
-      selectedSession = callSid;
-      // Update UI to show selected session
-      document.querySelectorAll('.client').forEach(c => c.classList.remove('selected'));
-      document.querySelector(`[data-call-sid="${callSid}"]`).classList.add('selected');
-      
-      // Update session info
-      document.getElementById('liveName').textContent = callerPhone;
-      document.getElementById('liveId').textContent = callSid;
-      
-      // Clear transcript for new selection
-      document.getElementById('transcript').innerHTML = `
-        <div class="msg" style="text-align:center;color:#6b7280;padding:20px;">
-          Live transcript will appear here once conversation starts...
-        </div>
-      `;
-    }
-    
-    function updateTranscript(data) {
-      if (selectedSession !== data.call_sid) return;
-      
-      const transcript = document.getElementById('transcript');
-      
-      // Clear placeholder if this is the first message
-      if (transcript.children.length === 1 && transcript.children[0].style.textAlign === 'center') {
-        transcript.innerHTML = '';
-      }
-      
-      const msgElement = document.createElement('div');
-      msgElement.className = `msg ${data.role}`;
-      const time = new Date().toLocaleTimeString();
-      msgElement.innerHTML = `
-        <div class="time">${time} • ${data.role.toUpperCase()}</div>
-        ${data.content}
-      `;
-      
-      transcript.appendChild(msgElement);
-      transcript.scrollTop = transcript.scrollHeight;
-    }
-    
-    function sendGuidance() {
-      if (!selectedSession || !ws) {
-        alert('Please select an active session and ensure WebSocket is connected');
-        return;
-      }
-      
-      const guidance = document.getElementById('guidanceText').value.trim();
-      if (!guidance) {
-        alert('Please enter guidance text');
-        return;
-      }
-      
-      ws.send(JSON.stringify({
-        type: 'human_guidance',
-        session_id: selectedSession,
-        guidance: guidance
-      }));
-      
-      // Clear the textarea
-      document.getElementById('guidanceText').value = '';
-    }
-    
-    // Update call durations every second
-    setInterval(() => {
-      Object.keys(callStartTime).forEach(callSid => {
-        const element = document.querySelector(`[data-call-sid="${callSid}"] .duration`);
-        if (element) {
-          const elapsed = Math.floor((Date.now() - callStartTime[callSid]) / 1000);
-          const minutes = Math.floor(elapsed / 60);
-          const seconds = elapsed % 60;
-          element.textContent = `Duration: ${minutes}m ${seconds}s`;
-        }
-      });
-    }, 1000);
-    
-    // Event listeners
-    document.getElementById('sendGuidanceBtn').addEventListener('click', sendGuidance);
-    
-    // Initialize dashboard
-    connectWebSocket();
-  </script>
-</body>
-</html>
-    '''
-    
-    return web.Response(text=dashboard_html, content_type='text/html')
-
+# ====== CLEANUP HANDLER ======
 async def bulk_cleanup_handler(request):
     """HTTP endpoint for bulk cleanup operations"""
     if not db:
         return web.Response(text="Database not available", status=500)
-    
+
     def normalize_phone(phone):
-        """Normalize phone number format"""
         if not phone:
             return None
-        phone = phone.strip()
-        phone = phone.replace(" ", "")  # Remove all spaces
-        
-        # Handle different formats
+        phone = phone.strip().replace(" ", "")
         if phone.startswith("0"):
             phone = "+61" + phone[1:]
         elif phone.startswith("61") and not phone.startswith("+"):
             phone = "+" + phone
         elif not phone.startswith("+") and phone.isdigit():
             phone = "+61" + phone
-            
         return phone
-    
+
     try:
-        # Get query parameters
         params = request.query
         action = params.get('action', '')
         raw_phone = params.get('phone', '')
         days_old = int(params.get('days', 7))
-        
-        # Normalize phone number properly
-        normalized_phone = normalize_phone(raw_phone) if raw_phone else None
-        
-        if action == 'count_sessions':
-            if normalized_phone:
-                count = await db.count_sessions_by_phone(normalized_phone)
-                return web.Response(text=f"Phone {normalized_phone} has {count} sessions")
-            else:
-                total_count = await db.count_all_sessions()
-                return web.Response(text=f"Total sessions in database: {total_count}")
-        
-        elif action == 'list_sessions':
-            if normalized_phone:
-                sessions = await db.get_sessions_by_phone(normalized_phone)
-                session_list = []
-                for session in sessions:
-                    session_dict = {
-                        'session_id': session[0],
-                        'caller_phone': session[1],
-                        'created_at': str(session[2]),
-                        'session_number': session[3]
-                    }
-                    session_list.append(session_dict)
-                
-                return web.json_response({
-                    'phone': normalized_phone,
-                    'sessions': session_list,
-                    'count': len(session_list)
-                })
-            else:
-                return web.Response(text="Phone parameter required for list_sessions", status=400)
-        
-        elif action == 'delete_old_sessions':
-            deleted_count = await db.delete_old_sessions(days_old)
-            return web.Response(text=f"Deleted {deleted_count} sessions older than {days_old} days")
-        
-        elif action == 'delete_phone_sessions':
-            if normalized_phone:
-                deleted_count = await db.delete_sessions_by_phone(normalized_phone)
-                return web.Response(text=f"Deleted {deleted_count} sessions for phone {normalized_phone}")
-            else:
-                return web.Response(text="Phone parameter required for delete_phone_sessions", status=400)
-        
-        elif action == 'cleanup_empty_sessions':
-            deleted_count = await db.cleanup_empty_sessions()
-            return web.Response(text=f"Deleted {deleted_count} empty sessions (no messages)")
-        
+
+        caller_phone = normalize_phone(raw_phone)
+
+        print(f"🔍 DEBUG: Cleanup action={action}, raw_phone='{raw_phone}', normalized_phone='{caller_phone}', days={days_old}")
+
+        if action == 'delete_old_sessions':
+            async with db.pool.acquire() as conn:
+                message_count = await conn.fetchval(f'''
+                    SELECT COUNT(*) FROM messages 
+                    WHERE session_id IN (
+                        SELECT session_id FROM sessions 
+                        WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                    )
+                ''')
+
+                session_count = await conn.fetchval(f'''
+                    SELECT COUNT(*) FROM sessions 
+                    WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                ''')
+
+                await conn.execute(f'''
+                    DELETE FROM messages 
+                    WHERE session_id IN (
+                        SELECT session_id FROM sessions 
+                        WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                    )
+                ''')
+
+                await conn.execute(f'''
+                    DELETE FROM sessions 
+                    WHERE created_at < NOW() - INTERVAL '{days_old} days'
+                ''')
+
+            return web.Response(text=f"Deleted old data: {message_count} messages, {session_count} sessions (older than {days_old} days)")
+
+        elif action == 'delete_caller_data' and caller_phone:
+            async with db.pool.acquire() as conn:
+                print(f"🔍 DEBUG: Looking for sessions with caller_phone = '{caller_phone}'")
+
+                sessions_to_delete = await conn.fetch('''
+                    SELECT session_id, caller_phone, created_at 
+                    FROM sessions 
+                    WHERE caller_phone = $1
+                ''', caller_phone)
+
+                print(f"🔍 DEBUG: Found {len(sessions_to_delete)} sessions for {caller_phone}")
+                for session in sessions_to_delete:
+                    sid = str(session['session_id'])
+                    print(f"🔍 DEBUG: Session {sid[:8]}... created {session['created_at']}")
+
+                if sessions_to_delete:
+                    message_count = await conn.fetchval('''
+                        SELECT COUNT(*) FROM messages 
+                        WHERE session_id IN (
+                            SELECT session_id FROM sessions 
+                            WHERE caller_phone = $1
+                        )
+                    ''', caller_phone)
+
+                    await conn.execute('''
+                        DELETE FROM messages 
+                        WHERE session_id IN (
+                            SELECT session_id FROM sessions 
+                            WHERE caller_phone = $1
+                        )
+                    ''', caller_phone)
+
+                    await conn.execute('''
+                        DELETE FROM sessions 
+                        WHERE caller_phone = $1
+                    ''', caller_phone)
+
+                    result1 = message_count
+                    result2 = len(sessions_to_delete)
+                    print(f"🔍 DEBUG: Deleted {result1} messages, {result2} sessions")
+                else:
+                    result1 = result2 = 0
+                    print(f"🔍 DEBUG: No sessions found for {caller_phone}")
+
+                try:
+                    caller_count = await conn.fetchval(
+                        'SELECT COUNT(*) FROM callers WHERE phone_number = $1',
+                        caller_phone
+                    )
+                    await conn.execute(
+                        'DELETE FROM callers WHERE phone_number = $1',
+                        caller_phone
+                    )
+                    result3 = caller_count
+                    print(f"🔍 DEBUG: Deleted {result3} caller records")
+                except Exception as e:
+                    print(f"🔍 DEBUG: Callers table error (probably doesn't exist): {e}")
+                    result3 = 0
+
+            return web.Response(
+                text=f"Deleted caller {caller_phone}: {result1 or 0} messages, {result2 or 0} sessions, {result3 or 0} caller records"
+            )
+
+        elif action == 'count_records':
+            async with db.pool.acquire() as conn:
+                sessions_count = await conn.fetchval('SELECT COUNT(*) FROM sessions')
+                messages_count = await conn.fetchval('SELECT COUNT(*) FROM messages')
+                unique_callers = await conn.fetchval('SELECT COUNT(DISTINCT caller_phone) FROM sessions')
+
+                caller_breakdown = await conn.fetch('''
+                    SELECT caller_phone, COUNT(*) as session_count, MAX(created_at) as last_call
+                    FROM sessions 
+                    GROUP BY caller_phone 
+                    ORDER BY session_count DESC
+                ''')
+
+            breakdown_text = "\n".join(
+                f"  {row['caller_phone']}: {row['session_count']} sessions (last: {row['last_call']})"
+                for row in caller_breakdown
+            )
+
+            cleanup_phone = caller_breakdown[0]['caller_phone'] if caller_breakdown else '+61412247247'
+            cleanup_url = f"/cleanup?action=delete_caller_data&phone={cleanup_phone.replace('+', '%2B')}"
+
+            return web.Response(text=f'''Database Records:
+- {unique_callers} unique callers
+- {sessions_count} total sessions  
+- {messages_count} total messages
+
+Breakdown by caller:
+{breakdown_text}
+
+To delete your data, use:
+{cleanup_url}
+'''.strip())
+
         else:
-            help_text = """
-Available cleanup actions:
-- count_sessions?phone=PHONE - Count sessions for specific phone
-- count_sessions - Count all sessions  
-- list_sessions?phone=PHONE - List sessions for specific phone (JSON)
-- delete_old_sessions?days=N - Delete sessions older than N days (default 7)
-- delete_phone_sessions?phone=PHONE - Delete all sessions for specific phone
-- cleanup_empty_sessions - Delete sessions with no messages
+            return web.Response(text='''
+Available cleanup operations:
+- /cleanup?action=count_records
+- /cleanup?action=delete_old_sessions&days=7  
+- /cleanup?action=delete_caller_data&phone=%2B61412247247
 
-Phone formats supported: +61412345678, 0412345678, 61412345678, 412345678
-            """
-            return web.Response(text=help_text, content_type='text/plain')
-        
+Example: /cleanup?action=delete_old_sessions&days=3
+''', status=400)
+
     except Exception as e:
-        print(f"Error in bulk cleanup: {e}")
-        return web.Response(text=f"Error: {e}", status=500)
+        print(f"❌ Error in cleanup: {e}")
+        import traceback
+        print(f"🔍 DEBUG: Full cleanup error: {traceback.format_exc()}")
+        return web.Response(text=f"Cleanup error: {e}", status=500)
 
-async def websocket_handler(request):
-    """Handle Twilio WebSocket connections for voice processing"""
-    ws = web.WebSocketResponse(protocols=['voice-bridge'])
-    await ws.prepare(request)
-    print("🔌 WebSocket connection established")
-    
-    # Initialize variables
-    audio_queue = asyncio.Queue()
-    streamsid_queue = asyncio.Queue()
-    session_id = None
-    call_sid = None
-    caller_phone = None
-    
+
+# ====== DASHBOARD BROADCAST ======
+async def broadcast_to_dashboards(message: dict):
+    """Send a message to all connected dashboard websockets."""
+    if not dashboard_connections:
+        return
+    dead = []
+    data = json.dumps(message)
+    for ws in list(dashboard_connections):
+        try:
+            await ws.send_str(data)
+        except Exception as e:
+            print(f"⚠️ Error sending to dashboard WS: {e}")
+            dead.append(ws)
+    for ws in dead:
+        dashboard_connections.discard(ws)
+
+
+def snapshot_active_sessions():
+    """Return a serializable snapshot of current sessions for dashboard."""
+    sessions = []
+    now = time.time()
+    for call_sid, info in active_sessions.items():
+        sessions.append({
+            "call_sid": call_sid,
+            "caller_phone": info.get("caller_phone", "unknown"),
+            "status": info.get("status", "unknown"),
+            "session_id": str(info.get("session_id") or ""),
+            "created_at": info.get("created_at"),
+            "ended_at": info.get("ended_at"),
+            "age_seconds": now - info.get("created_at", now)
+        })
+    return sessions
+
+
+# ====== HTTP HANDLERS ======
+async def voice_webhook_handler(request):
+    """Initial Twilio voice webhook; returns TwiML that streams to /twilio."""
     try:
-        async def twilio_receiver():
-            """Handle messages from Twilio"""
-            print("📥 twilio_receiver started")
-            nonlocal session_id, call_sid, caller_phone
-            
-            try:
-                async for message in ws:
-                    if message.type == WSMsgType.TEXT:
-                        try:
-                            data = json.loads(message.data)
-                            
-                            # Handle start event
-                            if data.get('event') == 'start':
-                                call_sid = data['start']['callSid']
-                                print(f"🎬 Call started with CallSid: {call_sid}")
-                                
-                                # Get caller phone from stored session data
-                                if call_sid in active_sessions:
-                                    caller_phone = active_sessions[call_sid]['caller_phone']
-                                    active_sessions[call_sid]['status'] = 'active'
-                                else:
-                                    # Extract from custom parameters if available
-                                    custom_params = data['start'].get('customParameters', {})
-                                    caller_phone = custom_params.get('caller', 'unknown')
-                                
-                                print(f"📞 Caller identified as: {caller_phone}")
-                                
-                                # Initialize database session if available
-                                if db:
-                                    try:
-                                        session_id = await db.create_session(caller_phone)
-                                        print(f"📝 Database session created: {session_id}")
-                                        
-                                        # Get conversation context
-                                        recent_sessions = await db.get_recent_sessions(caller_phone, exclude_current=session_id, limit=5)
-                                        context = format_actual_conversation_context(recent_sessions)
-                                        
-                                        if context:
-                                            print(f"🧠 Context loaded: {len(context)} characters")
-                                        else:
-                                            print("🧠 No previous context found")
-                                            
-                                    except Exception as e:
-                                        print(f"Database session creation failed: {e}")
-                                        session_id = None
-                                
-                                # Broadcast call start to dashboard
-                                await broadcast_to_dashboards({
-                                    'type': 'call_started',
-                                    'call_sid': call_sid,
-                                    'caller_phone': caller_phone,
-                                    'session_id': session_id
-                                })
-                            
-                            # Handle media event
-                            elif data.get('event') == 'media':
-                                if 'media' in data and 'payload' in data['media']:
-                                    chunk = base64.b64decode(data['media']['payload'])
-                                    await audio_queue.put(chunk)
-                            
-                            # Handle stream start
-                            elif data.get('event') == 'connected':
-                                print("🌊 Media stream connected")
-                                stream_sid = data.get('streamSid', 'unknown')
-                                await streamsid_queue.put(stream_sid)
-                            
-                            # Handle stop event
-                            elif data.get('event') == 'stop':
-                                print("🛑 Call ended")
-                                shutdown_event.set()
-                                
-                                # Clean up session
-                                if call_sid in active_sessions:
-                                    del active_sessions[call_sid]
-                                
-                                # Broadcast call end to dashboard
-                                await broadcast_to_dashboards({
-                                    'type': 'call_ended',
-                                    'call_sid': call_sid
-                                })
-                                
-                        except json.JSONDecodeError as e:
-                            print(f"Failed to decode JSON: {e}")
-                        except Exception as e:
-                            print(f"Error processing message: {e}")
-                    
-                    elif message.type == WSMsgType.ERROR:
-                        print(f"WebSocket error: {message.data}")
-                        break
-                        
-            except Exception as e:
-                print(f"Error in twilio_receiver: {e}")
+        form_data = await request.post()
+        caller_phone = form_data.get('From', 'unknown')
+        call_sid = form_data.get('CallSid', 'unknown')
 
-        # Create Deepgram connection
-        sts_ws = await sts_connect()
-        print("🔗 Connected to Deepgram Voice Agent")
-        
-        # Include human guidance in Deepgram configuration if available
-        deepgram_config = {
-            "type": "SettingsConfiguration",
-            "agent": {
-                "think": {
-                    "provider": {"type": VOICE_MODEL},
-                    "model": LLM_MODEL,
-                    "instructions": VOICE_AGENT_PERSONALITY
-                },
-                "speak": {
-                    "model": VOICE_MODEL
-                }
-            }
+        print(f"🎯 Voice webhook: Call from {caller_phone}, CallSid: {call_sid}")
+
+        active_sessions[call_sid] = {
+            "caller_phone": caller_phone,
+            "status": "ringing",
+            "timestamp": time.time(),
+            "created_at": time.time(),
+            "ended_at": None,
+            "session_id": None,
+            "guidance": []
         }
-        
-        # Check for human guidance for this session
-        if session_id in human_guidance_queue:
-            guidance = human_guidance_queue[session_id]
-            deepgram_config["agent"]["think"]["instructions"] += f"\n\nHUMAN GUIDANCE: {guidance['guidance']}"
-            print(f"🧠 Including human guidance: {guidance['guidance']}")
-            # Remove used guidance
-            del human_guidance_queue[session_id]
-        
-        await sts_ws.send(json.dumps(deepgram_config))
-        print("⚙️ Deepgram configuration sent")
-        
-        async def sts_sender():
-            """Send audio from Twilio to Deepgram"""
-            print("🎤 sts_sender started")
-            try:
-                while not shutdown_event.is_set():
-                    try:
-                        chunk = await asyncio.wait_for(audio_queue.get(), timeout=1.0)
-                        await sts_ws.send(chunk)
-                    except asyncio.TimeoutError:
-                        continue
-            except Exception as e:
-                print(f"Error in sts_sender: {e}")
 
-        async def sts_receiver():
-            """Receive audio from Deepgram and send to Twilio"""
-            print("🔊 sts_receiver started")
-            try:
-                # Wait for stream ID from Twilio
-                streamsid = await streamsid_queue.get()
-                print(f"🌊 Got stream ID: {streamsid}")
-                
-                async for message in sts_ws:
-                    if shutdown_event.is_set():
-                        break
-                        
-                    if type(message) is str:
-                        print(f"📨 Deepgram message: {message}")
-                        try:
-                            decoded = json.loads(message)
-                            
-                            # Store conversation messages in database and broadcast to dashboard
-                            if decoded.get('type') == 'ConversationText' and session_id and db:
-                                role = decoded.get('role')
-                                content = decoded.get('content')
-                                if role and content:
-                                    try:
-                                        # Map Deepgram roles to database-compatible roles
-                                        db_role = 'ai' if role == 'assistant' else role
-                                        await db.add_message(session_id, db_role, content, decoded)
-                                        print(f"💬 Stored message: {db_role} - {content[:50]}...")
-                                        
-                                        # Broadcast transcript update to dashboard
-                                        await broadcast_to_dashboards({
-                                            'type': 'transcript_update',
-                                            'session_id': session_id,
-                                            'call_sid': call_sid,
-                                            'role': db_role,
-                                            'content': content,
-                                            'timestamp': time.time()
-                                        })
-                                        
-                                    except Exception as e:
-                                        print(f"Error storing message: {e}")
-                            
-                            if decoded['type'] == 'UserStartedSpeaking':
-                                # Handle barge-in
-                                clear_message = {
-                                    "event": "clear",
-                                    "streamSid": streamsid
-                                }
-                                await ws.send_str(json.dumps(clear_message))
-                        except json.JSONDecodeError:
-                            print(f"Could not decode message: {message}")
-                        continue
+        await broadcast_to_dashboards({
+            "type": "call_started",
+            "call_sid": call_sid,
+            "caller_phone": caller_phone,
+            "status": "ringing",
+            "timestamp": time.time()
+        })
 
-                    # Handle binary audio data
-                    if isinstance(message, bytes):
-                        media_message = {
-                            "event": "media",
-                            "streamSid": streamsid,
-                            "media": {"payload": base64.b64encode(message).decode("ascii")},
-                        }
-                        await ws.send_str(json.dumps(media_message))
+        host = request.host
+        websocket_url = f"wss://{host}/twilio"
+        print(f"🔗 Twilio will connect to WebSocket: {websocket_url}")
 
-            except Exception as e:
-                print(f"Error in sts_receiver: {e}")
+        twiml_response = f'''<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Connect>
+        <Stream url="{websocket_url}">
+            <Parameter name="caller" value="{caller_phone}"/>
+            <Parameter name="callsid" value="{call_sid}"/>
+        </Stream>
+    </Connect>
+</Response>'''
 
-        # Run both Deepgram tasks with Twilio task
-        twilio_task = twilio_receiver()
-        await asyncio.gather(
-            sts_sender(),
-            sts_receiver(),
-            twilio_task,
-            return_exceptions=True
+        return web.Response(text=twiml_response, content_type='application/xml')
+
+    except Exception as e:
+        print(f"Error in voice webhook: {e}")
+        return web.Response(
+            text='''<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say>Sorry, there was a connection error. Please try calling again.</Say>
+</Response>''',
+            content_type='application/xml'
         )
 
-    except Exception as e:
-        print(f"Error in twilio_handler: {e}")
 
 async def health_check(request):
-    """HTTP health check endpoint for Railway"""
     return web.Response(
-        text="OK", 
+        text="OK",
         status=200,
-        headers={
-            'Content-Type': 'text/plain',
-            'Cache-Control': 'no-cache'
-        }
+        headers={'Content-Type': 'text/plain', 'Cache-Control': 'no-cache'}
     )
 
+
 async def root_handler(request):
-    """Root endpoint handler"""
     return web.Response(
-        text="Twilio-Deepgram Bridge Server with Human Guidance Dashboard", 
+        text="Twilio-Deepgram Bridge Server with HGO Dashboard",
         status=200,
         headers={'Content-Type': 'text/plain'}
     )
 
+
+# ====== DASHBOARD HTML (simple v24-style) ======
+async def dashboard_handler(request):
+    """Serve the HGO dashboard page."""
+    # If you have a separate HTML file, you could read it here instead.
+    html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>LOGOS AI – HGO Oversight Dashboard</title>
+<style>
+  body { margin:0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#050816; color:#e5e7eb; }
+  .app { display:flex; flex-direction:column; height:100vh; }
+  header { padding:12px 20px; border-bottom:1px solid #1f2933; display:flex; align-items:center; justify-content:space-between; }
+  header h1 { font-size:18px; margin:0; }
+  header .status { font-size:12px; opacity:.7; }
+  main { flex:1; display:flex; padding:12px; gap:12px; box-sizing:border-box; }
+  .col { flex:1; background:#020617; border-radius:12px; padding:10px; border:1px solid #111827; display:flex; flex-direction:column; min-width:0; }
+  h2 { font-size:14px; margin:0 0 8px; display:flex; justify-content:space-between; align-items:center; }
+  h3 { font-size:13px; margin:0 0 4px; }
+  .count { font-size:11px; opacity:.7; }
+  .list { flex:1; overflow-y:auto; padding-right:4px; }
+  .client-card { border-radius:10px; padding:8px; margin-bottom:6px; background:#020617; border:1px solid #1f2937; cursor:pointer; }
+  .client-card.active { border-color:#38bdf8; box-shadow:0 0 0 1px #0ea5e955; }
+  .client-name { font-size:13px; font-weight:600; }
+  .client-meta { font-size:11px; opacity:.8; margin-top:2px; }
+  .badge { display:inline-flex; align-items:center; padding:2px 6px; border-radius:999px; font-size:10px; margin-right:4px; }
+  .badge.danger { background:#7f1d1d; color:#fecaca; }
+  .badge.ok { background:#064e3b; color:#bbf7d0; }
+  .badge.info { background:#0f172a; color:#e5e7eb; }
+  .session-header { margin-bottom:8px; }
+  .session-id { font-size:11px; opacity:.7; margin-left:6px; }
+  .transcript { flex:1; background:#020617; border-radius:10px; padding:8px; border:1px solid #1f2937; overflow-y:auto; font-size:12px; }
+  .msg { margin-bottom:6px; max-width:90%; padding:6px 8px; border-radius:8px; }
+  .msg.user { background:#0f172a; align-self:flex-start; }
+  .msg.ai { background:#111827; align-self:flex-end; }
+  .msg .sender { font-size:10px; opacity:.7; margin-bottom:2px; }
+  .msg .text { white-space:pre-wrap; }
+  .guidance { margin-top:8px; }
+  textarea { width:100%; min-height:70px; resize:vertical; border-radius:8px; border:1px solid #1f2937; background:#020617; color:#e5e7eb; padding:6px; font-size:12px; box-sizing:border-box; }
+  button { margin-top:6px; padding:6px 10px; border-radius:999px; border:none; font-size:12px; background:#0ea5e9; color:#0b1120; cursor:pointer; }
+  button:disabled { opacity:0.5; cursor:default; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>LOGOS AI – Human Guidance Dashboard</h1>
+      <div class="status" id="status">Connecting to live sessions…</div>
+    </div>
+  </header>
+  <main>
+    <div class="col" id="inactive-col">
+      <h2>Inactive Clients <span class="count" id="inactive-count">(0)</span></h2>
+      <div class="list" id="inactive-list"></div>
+    </div>
+    <div class="col" id="active-col">
+      <h2>Active Clients <span class="count" id="active-count">(0)</span></h2>
+      <div class="list" id="active-list"></div>
+    </div>
+    <div class="col" id="live-col">
+      <div class="session-header">
+        <h3 id="live-title">Live Session — <span id="liveName">None</span></h3>
+        <div class="session-id" id="liveId"></div>
+      </div>
+      <div class="transcript" id="transcript"></div>
+      <div class="guidance">
+        <h3>Human Guidance to AI / Caller</h3>
+        <textarea id="guidance-input" placeholder="Type an instruction for the AI or a note about what you’re seeing…"></textarea>
+        <button id="guidance-send" disabled>Send Guidance</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+let ws = null;
+let activeSessions = {}; // call_sid -> {caller_phone, status, session_id}
+let selectedCallSid = null;
+
+function connectWS() {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = proto + '//' + window.location.host + '/dashboard-ws';
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    document.getElementById('status').textContent = 'Connected to live sessions';
+    ws.send(JSON.stringify({type: 'subscribe_dashboard'}));
+  };
+
+  ws.onclose = () => {
+    document.getElementById('status').textContent = 'Disconnected – retrying…';
+    setTimeout(connectWS, 2000);
+  };
+
+  ws.onerror = () => {
+    document.getElementById('status').textContent = 'WebSocket error';
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      handleMessage(data);
+    } catch (e) {
+      console.error('Bad WS message', e, event.data);
+    }
+  };
+}
+
+function handleMessage(data) {
+  switch (data.type) {
+    case 'active_sessions':
+      updateSessionsSnapshot(data.sessions);
+      break;
+    case 'call_started':
+      addOrUpdateSession(data.call_sid, data);
+      break;
+    case 'call_ended':
+      markSessionEnded(data.call_sid);
+      break;
+    case 'transcript_update':
+      handleTranscriptUpdate(data);
+      break;
+    default:
+      console.log('Unknown message', data);
+  }
+}
+
+function updateSessionsSnapshot(list) {
+  activeSessions = {};
+  list.forEach(s => { activeSessions[s.call_sid] = s; });
+  renderLists();
+}
+
+function addOrUpdateSession(call_sid, payload) {
+  if (!activeSessions[call_sid]) {
+    activeSessions[call_sid] = {};
+  }
+  Object.assign(activeSessions[call_sid], payload);
+  if (!activeSessions[call_sid].status) activeSessions[call_sid].status = 'active';
+  renderLists();
+}
+
+function markSessionEnded(call_sid) {
+  if (activeSessions[call_sid]) {
+    activeSessions[call_sid].status = 'inactive';
+    activeSessions[call_sid].ended_at = Date.now()/1000;
+  }
+  renderLists();
+}
+
+function renderLists() {
+  const inactiveList = document.getElementById('inactive-list');
+  const activeList = document.getElementById('active-list');
+  inactiveList.innerHTML = '';
+  activeList.innerHTML = '';
+
+  let inactiveCount = 0;
+  let activeCount = 0;
+
+  Object.keys(activeSessions).forEach(call_sid => {
+    const s = activeSessions[call_sid];
+    const card = document.createElement('div');
+    card.className = 'client-card';
+    if (call_sid === selectedCallSid) card.classList.add('active');
+    card.onclick = () => { selectSession(call_sid); };
+
+    const name = s.caller_phone || 'Unknown';
+    const status = s.status || 'unknown';
+
+    card.innerHTML = `
+      <div class="client-name">${name}</div>
+      <div class="client-meta">
+        <span class="badge ${status === 'active' ? 'ok' : 'info'}">${status}</span>
+        ${s.session_id ? `<span class="badge info">Session ${s.session_id.slice(0,8)}</span>` : ''}
+      </div>
+    `;
+
+    if (status === 'active') {
+      activeList.appendChild(card);
+      activeCount++;
+    } else {
+      inactiveList.appendChild(card);
+      inactiveCount++;
+    }
+  });
+
+  document.getElementById('inactive-count').textContent = `(${inactiveCount})`;
+  document.getElementById('active-count').textContent = `(${activeCount})`;
+}
+
+function selectSession(call_sid) {
+  selectedCallSid = call_sid;
+  const s = activeSessions[call_sid];
+  document.getElementById('liveName').textContent = s ? (s.caller_phone || 'Unknown') : 'None';
+  document.getElementById('liveId').textContent = s && s.session_id ? `Call: ${call_sid} | Session: ${s.session_id}` : `Call: ${call_sid}`;
+  document.getElementById('guidance-send').disabled = false;
+  document.querySelectorAll('.client-card').forEach(c => c.classList.remove('active'));
+  renderLists(); // re-apply active selection
+}
+
+function handleTranscriptUpdate(data) {
+  const call_sid = data.call_sid;
+  if (!call_sid) return;
+  addOrUpdateSession(call_sid, data);
+  if (!selectedCallSid) {
+    selectSession(call_sid);
+  }
+  if (selectedCallSid === call_sid) {
+    const box = document.getElementById('transcript');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (data.role === 'ai' ? 'ai' : 'user');
+    const who = data.role === 'ai' ? 'AI' : 'Caller';
+    div.innerHTML = `
+      <div class="sender">${who}</div>
+      <div class="text">${data.content}</div>
+    `;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+document.getElementById('guidance-send').addEventListener('click', () => {
+  const txt = document.getElementById('guidance-input').value.trim();
+  if (!txt || !ws || ws.readyState !== WebSocket.OPEN || !selectedCallSid) return;
+  ws.send(JSON.stringify({
+    type: 'human_guidance',
+    call_sid: selectedCallSid,
+    guidance: txt
+  }));
+  document.getElementById('guidance-input').value = '';
+});
+
+connectWS();
+</script>
+</body>
+</html>
+    """.strip()
+    return web.Response(text=html, content_type='text/html')
+
+
+# ====== DASHBOARD WEBSOCKET ======
+async def dashboard_websocket_handler(request):
+    """Handle dashboard WebSocket connections for real-time monitoring."""
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    dashboard_connections.add(ws)
+    print("📊 Dashboard connected")
+    # On connect, send snapshot
+    await ws.send_str(json.dumps({
+        "type": "active_sessions",
+        "sessions": snapshot_active_sessions()
+    }))
+
+    try:
+        async for msg in ws:
+            if msg.type == web.WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
+                except json.JSONDecodeError:
+                    print(f"⚠️ Bad JSON from dashboard: {msg.data}")
+                    continue
+
+                if data.get("type") == "subscribe_dashboard":
+                    # Already sent snapshot
+                    pass
+                elif data.get("type") == "human_guidance":
+                    call_sid = data.get("call_sid")
+                    guidance = data.get("guidance", "").strip()
+                    if call_sid and guidance:
+                        info = active_sessions.get(call_sid)
+                        if info is None:
+                            active_sessions[call_sid] = {
+                                "caller_phone": "unknown",
+                                "status": "active",
+                                "timestamp": time.time(),
+                                "created_at": time.time(),
+                                "ended_at": None,
+                                "session_id": None,
+                                "guidance": []
+                            }
+                            info = active_sessions[call_sid]
+                        info.setdefault("guidance", []).append(guidance)
+                        print(f"🧭 Human guidance for {call_sid}: {guidance[:80]}")
+
+                        # Optionally, record in DB if session exists
+                        if db and info.get("session_id"):
+                            try:
+                                await db.add_message(info["session_id"], "hgo", guidance, {"source": "dashboard"})
+                            except Exception as e:
+                                print(f"⚠️ Error saving HGO guidance: {e}")
+                else:
+                    print(f"ℹ️ Unknown dashboard message: {data}")
+
+            elif msg.type == web.WSMsgType.ERROR:
+                print(f"⚠️ Dashboard WS error: {ws.exception()}")
+                break
+
+    finally:
+        dashboard_connections.discard(ws)
+        print("📊 Dashboard disconnected")
+
+    return ws
+
+
+# ====== TWILIO WEBSOCKET HANDLERS ======
+async def websocket_handler(request):
+    """Handle WebSocket connections from Twilio."""
+    print(f"🔍 WEBSOCKET DEBUG: Incoming connection from {request.remote}")
+    print(f"🔍 Headers: {dict(request.headers)}")
+    print(f"🔍 Query params: {dict(request.query)}")
+
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    print(f"📞 Twilio WebSocket connection established on path: {request.path}")
+
+    try:
+        await twilio_handler(ws)
+    except Exception as e:
+        print(f"Error in WebSocket handler: {e}")
+    finally:
+        if not ws.closed:
+            await ws.close()
+
+    return ws
+
+
+async def twilio_handler(twilio_ws):
+    """Handle Twilio WebSocket communication with Deepgram."""
+    audio_queue = asyncio.Queue()
+    streamsid_queue = asyncio.Queue()
+
+    session_id = None
+    caller_phone = None
+    call_sid = None
+
+    caller_info_ready = asyncio.Event()
+
+    try:
+        async def twilio_receiver():
+            nonlocal session_id, caller_phone, call_sid
+            print("📱 twilio_receiver started")
+            BUFFER_SIZE = 20 * 160  # 0.4 seconds at 8k mulaw
+            inbuffer = bytearray(b"")
+
+            try:
+                async for msg in twilio_ws:
+                    if shutdown_event.is_set():
+                        break
+
+                    if msg.type == web.WSMsgType.TEXT:
+                        try:
+                            data = json.loads(msg.data)
+                        except json.JSONDecodeError:
+                            print(f"⚠️ Error decoding Twilio message: {msg.data}")
+                            continue
+
+                        event_type = data.get("event")
+                        if event_type == "start":
+                            print("🚀 Received Twilio start event")
+                            start = data.get("start", {})
+                            streamsid = start.get("streamSid")
+                            actual_call_sid = start.get("callSid")
+                            custom_params = start.get("customParameters", {})
+
+                            caller_phone = custom_params.get("caller", "unknown")
+                            call_sid = custom_params.get("callsid", actual_call_sid)
+
+                            print(f"📱 Caller phone from Twilio: {caller_phone}")
+                            print(f"☎️ Call SID: {call_sid}")
+                            print(f"🔗 Stream ID: {streamsid}")
+
+                            # Update active_sessions
+                            info = active_sessions.get(call_sid) or {}
+                            info.update({
+                                "caller_phone": caller_phone,
+                                "status": "active",
+                                "timestamp": time.time(),
+                                "created_at": info.get("created_at", time.time()),
+                                "ended_at": None,
+                                "session_id": None,
+                                "guidance": info.get("guidance", [])
+                            })
+                            active_sessions[call_sid] = info
+
+                            await broadcast_to_dashboards({
+                                "type": "call_started",
+                                "call_sid": call_sid,
+                                "caller_phone": caller_phone,
+                                "status": "active",
+                                "timestamp": time.time()
+                            })
+
+                            streamsid_queue.put_nowait(streamsid)
+                            caller_info_ready.set()
+
+                        elif event_type == "connected":
+                            print("✅ Twilio connected event")
+
+                        elif event_type == "media":
+                            media = data.get("media", {})
+                            chunk = base64.b64decode(media.get("payload", ""))
+                            if media.get("track") == "inbound":
+                                inbuffer.extend(chunk)
+
+                        elif event_type == "stop":
+                            print("🛑 Twilio stop event")
+                            # Mark session inactive
+                            if call_sid and call_sid in active_sessions:
+                                active_sessions[call_sid]["status"] = "inactive"
+                                active_sessions[call_sid]["ended_at"] = time.time()
+                                await broadcast_to_dashboards({
+                                    "type": "call_ended",
+                                    "call_sid": call_sid
+                                })
+                            # End DB session
+                            if session_id and db:
+                                try:
+                                    summary = "Phone call session (summary TBD)"
+                                    await db.end_session(session_id, summary)
+                                    print(f"💾 Session {session_id} ended and saved")
+                                except Exception as e:
+                                    print(f"⚠️ Error ending session: {e}")
+                            break
+
+                        # Flush buffered audio to Deepgram
+                        while len(inbuffer) >= BUFFER_SIZE:
+                            chunk = inbuffer[:BUFFER_SIZE]
+                            audio_queue.put_nowait(chunk)
+                            inbuffer = inbuffer[BUFFER_SIZE:]
+
+                    elif msg.type == web.WSMsgType.ERROR:
+                        print(f"⚠️ WebSocket error from Twilio: {twilio_ws.exception()}")
+                        break
+
+            except Exception as e:
+                print(f"Error in twilio_receiver: {e}")
+
+        twilio_task = asyncio.create_task(twilio_receiver())
+
+        # Wait until we know caller_phone/call_sid
+        await caller_info_ready.wait()
+
+        # Build base prompt and memory context
+        ai_prompt = VOICE_AGENT_PERSONALITY
+
+        if db and caller_phone != 'unknown':
+            try:
+                print(f"🔍 DEBUG: Loading context for {caller_phone}")
+                caller_data = await db.get_or_create_caller(caller_phone, call_sid or "websocket-call")
+                session_id = caller_data['session_id']
+                ctx = caller_data.get('context') or {}
+
+                print(f"💾 Loaded caller context - Session {caller_data.get('session_number')}")
+                recent = (ctx.get('recent_sessions') or []) if isinstance(ctx, dict) else []
+
+                if recent:
+                    print(f"📚 Found {len(recent)} previous sessions")
+                    actual_context = format_actual_conversation_context(recent)
+                    if actual_context:
+                        ai_prompt = f"""{VOICE_AGENT_PERSONALITY}
+
+{actual_context}
+
+Remember: Only refer to what this caller actually said in previous conversations."""
+                        print("🧠 AI prompt enhanced with ACTUAL conversation content")
+                        print(f"📝 Full prompt preview: {ai_prompt[:500]}...")
+                    else:
+                        print("🔍 DEBUG: No actual context generated")
+                else:
+                    print("🔍 DEBUG: No previous sessions found")
+
+                # Update active_sessions with DB session_id
+                if call_sid and call_sid in active_sessions:
+                    active_sessions[call_sid]["session_id"] = session_id
+
+            except Exception as e:
+                print(f"❌ Database error while loading context: {e}")
+                import traceback
+                print(traceback.format_exc())
+
+        # Connect to Deepgram
+        async with sts_connect() as sts_ws:
+            config_message = {
+                "type": "Settings",
+                "audio": {
+                    "input": {
+                        "encoding": "mulaw",
+                        "sample_rate": 8000,
+                    },
+                    "output": {
+                        "encoding": "mulaw",
+                        "sample_rate": 8000,
+                        "container": "none",
+                    },
+                },
+                "agent": {
+                    "language": "en",
+                    "listen": {
+                        "provider": {
+                            "type": "deepgram",
+                            "model": "nova-3"
+                        }
+                    },
+                    "think": {
+                        "provider": {
+                            "type": "open_ai",
+                            "model": LLM_MODEL,
+                            "temperature": LLM_TEMPERATURE
+                        },
+                        "prompt": ai_prompt
+                    },
+                    "speak": {
+                        "provider": {
+                            "type": "deepgram",
+                            "model": VOICE_MODEL
+                        }
+                    },
+                    "greeting": "Hello, I’m LOGOS AI. How can I support you today?"
+                }
+            }
+
+            await sts_ws.send(json.dumps(config_message))
+            print("⚙️ Configuration sent to Deepgram with prompt & context")
+
+            async def sts_sender():
+                print("🎤 sts_sender started")
+                try:
+                    while not shutdown_event.is_set():
+                        try:
+                            chunk = await asyncio.wait_for(audio_queue.get(), timeout=1.0)
+                            await sts_ws.send(chunk)
+                        except asyncio.TimeoutError:
+                            continue
+                except Exception as e:
+                    print(f"Error in sts_sender: {e}")
+
+            async def sts_receiver():
+                print("🔊 sts_receiver started")
+                try:
+                    streamsid = await streamsid_queue.get()
+                    print(f"🌊 Got Twilio stream ID: {streamsid}")
+
+                    async for message in sts_ws:
+                        if shutdown_event.is_set():
+                            break
+
+                        if isinstance(message, str):
+                            print(f"📨 Deepgram text message: {message}")
+                            try:
+                                decoded = json.loads(message)
+                            except json.JSONDecodeError:
+                                continue
+
+                            # Store conversation messages in DB
+                            if decoded.get("type") == "ConversationText" and session_id and db:
+                                role = decoded.get("role")
+                                content = decoded.get("content")
+                                if role and content:
+                                    db_role = "ai" if role == "assistant" else role
+                                    try:
+                                        await db.add_message(session_id, db_role, content, decoded)
+                                        print(f"💬 Stored message: {db_role} - {content[:60]}...")
+                                    except Exception as e:
+                                        print(f"⚠️ Error storing message: {e}")
+
+                                    # Also broadcast to dashboard
+                                    await broadcast_to_dashboards({
+                                        "type": "transcript_update",
+                                        "session_id": str(session_id),
+                                        "call_sid": call_sid,
+                                        "role": db_role,
+                                        "content": content,
+                                        "timestamp": time.time()
+                                    })
+
+                            # Handle barge-in
+                            if decoded.get("type") == "UserStartedSpeaking":
+                                clear_message = {
+                                    "event": "clear",
+                                    "streamSid": streamsid
+                                }
+                                await twilio_ws.send_str(json.dumps(clear_message))
+                        else:
+                            # Binary audio from Deepgram
+                            print(f"🎧 Received binary audio from Deepgram, {len(message)} bytes")
+                            media_message = {
+                                "event": "media",
+                                "streamSid": streamsid,
+                                "media": {"payload": base64.b64encode(message).decode("ascii")},
+                            }
+                            await twilio_ws.send_str(json.dumps(media_message))
+
+                except Exception as e:
+                    print(f"Error in sts_receiver: {e}")
+
+            await asyncio.gather(
+                sts_sender(),
+                sts_receiver(),
+                twilio_task,
+                return_exceptions=True
+            )
+
+    except Exception as e:
+        print(f"Error in twilio_handler: {e}")
+
+
+# ====== SIGNAL HANDLING ======
 def setup_signal_handlers():
-    """Setup signal handlers - ignore SIGTERM from Railway"""
     def ignore_sigterm(signum, frame):
-        print(f"Received signal {signum} from Railway")
+        print(f"Received signal {signum}")
         if signum == signal.SIGTERM:
-            print("Railway sent SIGTERM - but health checks are passing!")
-            print("Ignoring SIGTERM to keep server running (Railway may be testing)")
-            # Completely ignore SIGTERM - don't shut down
+            print("Ignoring SIGTERM to keep server running (Railway behavior)")
         elif signum == signal.SIGINT:
-            print("SIGINT received - user requested shutdown")
-            # Allow SIGINT to work normally for development
+            print("SIGINT received - stopping")
             raise KeyboardInterrupt()
 
     signal.signal(signal.SIGTERM, ignore_sigterm)
     signal.signal(signal.SIGINT, ignore_sigterm)
 
+
+# ====== APP FACTORY ======
 async def create_app():
-    """Create and configure the aiohttp application"""
     app = web.Application()
-    
-    # Setup CORS
-    cors = cors_setup(app, defaults={
-        "*": ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-            allow_methods="*"
-        )
-    })
-    
-    # Middleware for request logging
+
     @web.middleware
     async def logging_middleware(request, handler):
         print(f"🌐 Request: {request.method} {request.path} from {request.remote}")
@@ -1091,80 +1057,54 @@ async def create_app():
         except Exception as e:
             print(f"❌ Error handling {request.method} {request.path}: {e}")
             raise
-    
+
     app.middlewares.append(logging_middleware)
-    
-    # Routes
+
     app.router.add_get('/', root_handler)
     app.router.add_get('/health', health_check)
-    app.router.add_post('/webhook/voice', voice_webhook_handler)  # Twilio voice webhook
-    app.router.add_get('/twilio', websocket_handler)  # WebSocket endpoint for calls
-    app.router.add_get('/cleanup', bulk_cleanup_handler)  # Bulk cleanup operations
-    
-    # Dashboard routes
-    app.router.add_get('/dashboard', dashboard_handler)  # Dashboard HTML page
-    app.router.add_get('/dashboard-ws', dashboard_websocket_handler)  # Dashboard WebSocket
-    app.router.add_get('/api/clients', get_client_list)  # Client list API
-    
-    # Add CORS to all routes
-    for route in list(app.router.routes()):
-        cors.add(route)
-    
+    app.router.add_post('/webhook/voice', voice_webhook_handler)
+    app.router.add_get('/twilio', websocket_handler)
+    app.router.add_get('/cleanup', bulk_cleanup_handler)
+    app.router.add_get('/dashboard', dashboard_handler)
+    app.router.add_get('/dashboard-ws', dashboard_websocket_handler)
+
     return app
 
+
+# ====== MAIN ======
 def main():
-    """Main entry point"""
-    # Get port from environment (Railway sets this automatically)
     port = int(os.environ.get("PORT", 5000))
-    
-    print(f"🚀 Starting LOGOS AI Server with Dashboard on port {port}")
-    print(f"🔍 Health check endpoint: http://0.0.0.0:{port}/health")
+
+    print(f"🚀 Starting Twilio-Deepgram Bridge Server on port {port}")
+    print(f"🔍 Health: http://0.0.0.0:{port}/health")
     print(f"📞 Voice webhook: http://0.0.0.0:{port}/webhook/voice")
-    print(f"🔌 WebSocket endpoint: ws://0.0.0.0:{port}/twilio")
-    print(f"🗑️ Cleanup endpoint: http://0.0.0.0:{port}/cleanup")
-    print(f"🖥️ Dashboard: http://0.0.0.0:{port}/dashboard")
-    print(f"📡 Dashboard WebSocket: ws://0.0.0.0:{port}/dashboard-ws")
-    
-    # Check for required environment variables
+    print(f"🔌 Twilio WS: ws://0.0.0.0:{port}/twilio")
+    print(f"🗑️ Cleanup: http://0.0.0.0:{port}/cleanup")
+    print(f"📊 Dashboard: http://0.0.0.0:{port}/dashboard")
+
     if not os.getenv('DEEPGRAM_API_KEY'):
-        print("⚠️ WARNING: DEEPGRAM_API_KEY not found in environment variables")
+        print("⚠️ WARNING: DEEPGRAM_API_KEY not set")
     else:
-        print("✅ DEEPGRAM_API_KEY found in environment")
+        print("✅ DEEPGRAM_API_KEY found")
 
     async def run_server():
-        # Initialize database first
         await initialize_database()
-        
-        # Create the web application
         app = await create_app()
-        
-        # Create and start the server
         runner = web.AppRunner(app)
         await runner.setup()
-        
         site = web.TCPSite(runner, '0.0.0.0', port)
         await site.start()
-        
+
         print(f"🌟 Server running on 0.0.0.0:{port}")
-        print("🎯 Server is ready to accept connections")
-        print("💬 AI memory with comprehensive debug logging enabled!")
-        print("🗑️ Use /cleanup endpoint for bulk database operations")
-        print("🖥️ Human Guidance Dashboard available at /dashboard")
-        
-        # Setup signal handlers for graceful shutdown
         setup_signal_handlers()
-        
-        # Keep the server running
+
         try:
             while not shutdown_event.is_set():
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
-        
-        print("Server shutdown complete")
 
     try:
-        # Run the server
         asyncio.run(run_server())
     except KeyboardInterrupt:
         print("Server interrupted by user")
@@ -1173,8 +1113,9 @@ def main():
         import traceback
         traceback.print_exc()
         return 1
-    
+
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
