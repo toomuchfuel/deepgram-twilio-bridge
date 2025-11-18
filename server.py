@@ -220,11 +220,7 @@ async def dashboard_websocket_handler(request):
             'clients': inactive_clients
         }))
         
-        await ws.send_str(json.dumps({
-            'type': 'inactive_clients',
-            'clients': mock_inactive_clients
-        }))
-        
+               
         # Handle incoming dashboard messages
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
@@ -856,43 +852,43 @@ async def websocket_handler(request):
                                     await audio_queue.put(bytes(inbuffer))
                                 shutdown_event.set()
                                 
-                                                                 # Move call from active to inactive list and notify dashboards
-                                 if call_sid:
-                                     # Get session info if we have it
-                                     session_info = active_sessions.get(call_sid, {})
-                                     start_ts = session_info.get('timestamp')
-                                     duration_sec = time.time() - start_ts if start_ts else 0
+                                # Move call from active to inactive list and notify dashboards
+                                if call_sid:
+                                    # Get session info if we have it
+                                    session_info = active_sessions.get(call_sid, {})
+                                    start_ts = session_info.get('timestamp')
+                                    duration_sec = time.time() - start_ts if start_ts else 0
                                      
-                                     # Derive phone / display name
-                                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
+                                    # Derive phone / display name
+                                    phone = caller_phone or session_info.get('caller_phone') or "Unknown"
                                      
-                                     # Build a simple inactive client summary
-                                     inactive_clients.append({
-                                         'id': call_sid,
-                                         'name': phone,
-                                         'flag': 'Stable',
-                                         'calls': 1,
-                                         'avg': int(duration_sec // 60) if duration_sec else 0,
-                                         'last': 'Just now',
-                                         'progress': 0,
-                                         'health': 'Stable',
-                                     })
+                                    # Build a simple inactive client summary
+                                    inactive_clients.append({
+                                        'id': call_sid,
+                                        'name': phone,
+                                        'flag': 'Stable',
+                                        'calls': 1,
+                                        'avg': int(duration_sec // 60) if duration_sec else 0,
+                                        'last': 'Just now',
+                                        'progress': 0,
+                                        'health': 'Stable',
+                                    })
                                      
-                                     # Remove from active sessions if present
-                                     if call_sid in active_sessions:
-                                         del active_sessions[call_sid]
+                                    # Remove from active sessions if present
+                                    if call_sid in active_sessions:
+                                        del active_sessions[call_sid]
                                      
-                                     # Notify dashboards that call ended
-                                     await broadcast_to_dashboards({
-                                         'type': 'call_ended',
-                                         'call_sid': call_sid
-                                     })
+                                    # Notify dashboards that call ended
+                                    await broadcast_to_dashboards({
+                                        'type': 'call_ended',
+                                        'call_sid': call_sid
+                                    })
                                      
-                                     # Send updated inactive clients list
-                                     await broadcast_to_dashboards({
-                                         'type': 'inactive_clients',
-                                         'clients': inactive_clients
-                                     })
+                                    # Send updated inactive clients list
+                                    await broadcast_to_dashboards({
+                                        'type': 'inactive_clients',
+                                        'clients': inactive_clients
+                                    })
 
                                 
                         except json.JSONDecodeError as e:
