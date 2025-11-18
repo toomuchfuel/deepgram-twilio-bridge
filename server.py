@@ -548,10 +548,10 @@ Examples:
       const activeClients = document.getElementById('activeClients');
       callStartTime[callData.call_sid] = Date.now();
       // Check if client already exists to prevent duplicates
-const existingClient = document.querySelector(`[data-call-sid="${callData.call_sid}"]`);
-if (existingClient) {
-    return; // Don't add duplicates
-}
+      const existingClient = document.querySelector(`[data-call-sid="${callData.call_sid}"]`);
+      if (existingClient) {
+        return; // Don't add duplicates
+      }
       const clientElement = document.createElement('div');
       clientElement.className = 'client';
       clientElement.dataset.callSid = callData.call_sid;
