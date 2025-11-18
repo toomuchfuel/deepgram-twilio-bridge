@@ -996,7 +996,11 @@ Remember: Only refer to what this caller actually said in previous conversations
                                             await db.add_message(session_id, db_role, content, decoded)
                                             print(f"💬 Stored message: {db_role} - {content[:50]}...")
                                             
-                                            # Broadcast transcript update to dashboard
+                                            except Exception as e:
+                                            print(f"Error storing message: {e}")
+                                        
+                                        # Broadcast to dashboard (outside database transaction)
+                                        try:
                                             await broadcast_to_dashboards({
                                                 'type': 'transcript_update',
                                                 'session_id': session_id,
@@ -1005,10 +1009,10 @@ Remember: Only refer to what this caller actually said in previous conversations
                                                 'content': content,
                                                 'timestamp': time.time()
                                             })
-                                            
                                         except Exception as e:
-                                            print(f"Error storing message: {e}")
-                                
+                                            print(f"Error broadcasting to dashboard: {e}")
+                                            
+                                                                       
                                 if decoded['type'] == 'UserStartedSpeaking':
                                     # Handle barge-in
                                     clear_message = {
