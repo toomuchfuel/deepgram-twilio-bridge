@@ -251,6 +251,27 @@ class LogosDatabase:
                 'caller': dict(caller),
                 'sessions': [dict(session) for session in sessions]
             }
+        async def get_sessions_by_phone(self, phone_number):
+            """
+            Used by /cleanup?action=list_sessions&phone=...
+            Returns basic info for all sessions for a given phone.
+            """
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(
+                    '''
+                    SELECT 
+                        session_id,
+                        caller_phone,
+                        created_at,
+                        session_number
+                    FROM sessions
+                    WHERE caller_phone = $1
+                    ORDER BY created_at DESC
+                    ''',
+                    phone_number
+                )
+        
+            return rows
 
 # Integration helper functions
 def format_context_for_va(context_data, caller_data):
