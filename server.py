@@ -1081,6 +1081,41 @@ Remember: Only refer to what this caller actually said in previous conversations
                 return_exceptions=True
             )
 
+                # Fallback: if the call ended without a clean 'stop' event,
+            # make sure it is moved to inactive clients.
+            if call_sid:
+                already_inactive = any(c.get('id') == call_sid for c in inactive_clients)
+                if not already_inactive:
+                    session_info = active_sessions.get(call_sid, {})
+                    start_ts = session_info.get('timestamp')
+                    duration_sec = time.time() - start_ts if start_ts else 0
+
+                    phone = caller_phone or session_info.get('caller_phone') or "Unknown"
+
+                    inactive_clients.append({
+                        'id': call_sid,
+                        'name': phone,
+                        'flag': 'Stable',
+                        'calls': 1,
+                        'avg': int(duration_sec // 60) if duration_sec else 0,
+                        'last': 'Just now',
+                        'progress': 0,
+                        'health': 'Stable',
+                    })
+
+                    if call_sid in active_sessions:
+                        del active_sessions[call_sid]
+
+                    await broadcast_to_dashboards({
+                        'type': 'call_ended',
+                        'call_sid': call_sid
+                    })
+
+                    await broadcast_to_dashboards({
+                        'type': 'inactive_clients',
+                        'clients': inactive_clients
+                    })
+
     except Exception as e:
         print(f"Error in twilio_handler: {e}")
 
