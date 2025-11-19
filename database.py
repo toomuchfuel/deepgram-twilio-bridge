@@ -227,10 +227,13 @@ class LogosDatabase:
                 WHERE phone_number = $1
             ''', phone_number, master_prompt)
 
-        async def get_caller_history(self, phone_number):
+    async def get_caller_history(self, phone_number):
         """Get all caller data for HGO dashboard"""
         async with self.pool.acquire() as conn:
-            caller = await conn.fetchrow('SELECT * FROM callers WHERE phone_number = $1', phone_number)
+            caller = await conn.fetchrow(
+                'SELECT * FROM callers WHERE phone_number = $1',
+                phone_number
+            )
             
             if not caller:
                 return None
@@ -251,6 +254,7 @@ class LogosDatabase:
                 'caller': dict(caller),
                 'sessions': [dict(session) for session in sessions]
             }
+
 
     async def get_sessions_by_phone(self, phone_number):
         """
