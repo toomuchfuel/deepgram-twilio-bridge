@@ -850,8 +850,7 @@ async def websocket_handler(request):
                                 # Send any remaining buffered audio
                                 if inbuffer:
                                     await audio_queue.put(bytes(inbuffer))
-                                shutdown_event.set()
-                                
+                                                              
                                 # Move call from active to inactive list and notify dashboards
                                 if call_sid:
                                     # Get session info if we have it
