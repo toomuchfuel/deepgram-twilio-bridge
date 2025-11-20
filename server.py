@@ -729,7 +729,7 @@ async def bulk_cleanup_handler(request):
                 session_list = []
                 for session in sessions:
                     session_dict = {
-                        'session_id': session[0],
+                        'session_id': str(session[0]),   # <- changed
                         'caller_phone': session[1],
                         'created_at': str(session[2]),
                         'session_number': session[3]
