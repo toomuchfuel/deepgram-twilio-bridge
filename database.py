@@ -237,6 +237,28 @@ class LogosDatabase:
             
             if not caller:
                 return None
+        async def get_sessions_by_phone(self, phone_number):
+        """
+        Used by /cleanup?action=list_sessions&phone=...
+        Returns basic info for all sessions for a given phone.
+        """
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                '''
+                SELECT 
+                    session_id,
+                    caller_phone,
+                    created_at,
+                    session_number
+                FROM sessions
+                WHERE caller_phone = $1
+                ORDER BY created_at DESC
+                ''',
+                phone_number
+            )
+
+        return rows
+
             
             # Get all sessions with available data
             sessions = await conn.fetch('''
