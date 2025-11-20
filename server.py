@@ -1080,7 +1080,7 @@ Remember: Only refer to what this caller actually said in previous conversations
                 return_exceptions=True
             )
 
-                # Fallback: if the call ended without a clean 'stop' event,
+            # Fallback: if the call ended without a clean 'stop' event,
             # make sure it is moved to inactive clients.
             if call_sid:
                 already_inactive = any(c.get('id') == call_sid for c in inactive_clients)
@@ -1114,6 +1114,7 @@ Remember: Only refer to what this caller actually said in previous conversations
                         'type': 'inactive_clients',
                         'clients': inactive_clients
                     })
+
 
     except Exception as e:
         print(f"Error in twilio_handler: {e}")
