@@ -216,7 +216,7 @@ class LogosDatabase:
                     updated_at = NOW()
                 WHERE phone_number = $1
             ''', phone_number, new_context_item)
-        async def update_master_prompt(self, phone_number, master_prompt):
+    async def update_master_prompt(self, phone_number, master_prompt):
         """Update master prompt (HGO dashboard will use this)"""
         async with self.pool.acquire() as conn:
             await conn.execute('''
