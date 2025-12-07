@@ -735,13 +735,13 @@ Examples:
           html += '      if (data.transcript && data.transcript.length > 0) {';
           html += '        transcriptHtml += "<div style=\\"display:flex;flex-direction:column;gap:12px;\\">";';
           html += '        data.transcript.forEach(msg => {';
-          html += '          const bgColor = msg.speaker == "ai" ? "#eff6ff" : "#fafafa";';
-          html += '          const borderColor = msg.speaker == "ai" ? "#dbeafe" : "#e4e4e7";';
+          html += '          const bgColor = msg.speaker == \\"ai\\" ? \\"#eff6ff\\" : \\"#fafafa\\";';
+          html += '          const borderColor = msg.speaker == \\"ai\\" ? \\"#dbeafe\\" : \\"#e4e4e7\\";';
           html += '          transcriptHtml += "<div style=\\"background:" + bgColor + ";border:1px solid " + borderColor + ";border-radius:8px;padding:12px;\\">";';
           html += '          transcriptHtml += "<div style=\\"font-size:11px;color:#6b7280;margin-bottom:6px;\\">" + msg.speaker.toUpperCase();';
           html += '          if (msg.timestamp) transcriptHtml += " &bull; " + new Date(msg.timestamp).toLocaleTimeString();';
           html += '          transcriptHtml += "</div>";';
-          html += '          transcriptHtml += "<div>" + (msg.content || "") + "</div>";';
+          html += '          transcriptHtml += "<div>" + (msg.content || \"\") + "</div>";';
           html += '          transcriptHtml += "</div>";';
           html += '        });';
           html += '        transcriptHtml += "</div>";';
