@@ -672,12 +672,87 @@ Examples:
         return;
       }
       const phone = nameEl.textContent.trim();
-      if (!phone) {
+      if (!phone || phone === 'Select a client') {
         alert('No client selected');
         return;
       }
+
+      // Open popup window
+      const popup = window.open('', 'SessionHistory', 'width=800,height=600,scrollbars=yes');
+      popup.document.write('<html><head><title>Session History - ' + phone + '</title>');
+      popup.document.write('<style>body{font-family:system-ui;padding:20px;background:#f9fafb;}h1{margin:0 0 20px;}');
+      popup.document.write('.loading{text-align:center;color:#6b7280;padding:40px;}.session{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:12px;cursor:pointer;}');
+      popup.document.write('.session:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);}.session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}');
+      popup.document.write('.session-id{font-weight:600;font-size:14px;}.session-date{color:#6b7280;font-size:12px;}.session-meta{color:#6b7280;font-size:13px;}');
+      popup.document.write('.error{color:#ef4444;padding:20px;text-align:center;}</style></head><body>');
+      popup.document.write('<h1>Session History: ' + phone + '</h1>');
+      popup.document.write('<div class="loading">Loading sessions...</div>');
+      popup.document.write('</body></html>');
+
+      // Fetch session data
       const url = `/cleanup?action=list_sessions&phone=${encodeURIComponent(phone)}`;
-      window.open(url, '_blank');
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          let html = '<h1>Session History: ' + phone + '</h1>';
+          if (data.sessions && data.sessions.length > 0) {
+            html += '<p style="color:#6b7280;margin-bottom:20px;">Total sessions: ' + data.count + '</p>';
+            data.sessions.forEach(session => {
+              const date = new Date(session.created_at).toLocaleString();
+              html += '<div class="session" onclick="viewSessionTranscript(\'' + session.session_id + '\')">';
+              html += '<div class="session-header">';
+              html += '<span class="session-id">Session #' + session.session_number + '</span>';
+              html += '<span class="session-date">' + date + '</span>';
+              html += '</div>';
+              html += '<div class="session-meta">Click to view full conversation transcript</div>';
+              html += '</div>';
+            });
+          } else {
+            html += '<div class="error">No session history found for this caller.</div>';
+          }
+
+          // Add function to view transcript
+          html += '<script>';
+          html += 'function viewSessionTranscript(sessionId) {';
+          html += '  const transcriptUrl = "/cleanup?action=get_session_transcript&session_id=" + sessionId;';
+          html += '  fetch(transcriptUrl)';
+          html += '    .then(response => response.json())';
+          html += '    .then(data => {';
+          html += '      let transcriptHtml = "<h1>Session #" + data.session_number + " Transcript</h1>";';
+          html += '      transcriptHtml += "<p style=\\"color:#6b7280;margin-bottom:20px;\\">";';
+          html += '      transcriptHtml += "Date: " + new Date(data.start_time).toLocaleString() + "<br>";';
+          html += '      if (data.duration_seconds) transcriptHtml += "Duration: " + Math.floor(data.duration_seconds / 60) + "m " + (data.duration_seconds % 60) + "s<br>";';
+          html += '      transcriptHtml += "</p>";';
+          html += '      transcriptHtml += "<button onclick=\\"history.back()\\" style=\\"margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;\\">← Back to Sessions</button>";';
+          html += '      if (data.transcript && data.transcript.length > 0) {';
+          html += '        transcriptHtml += "<div style=\\"display:flex;flex-direction:column;gap:12px;\\">";';
+          html += '        data.transcript.forEach(msg => {';
+          html += '          const bgColor = msg.speaker === "ai" ? "#eff6ff" : "#fafafa";';
+          html += '          const borderColor = msg.speaker === "ai" ? "#dbeafe" : "#e4e4e7";';
+          html += '          transcriptHtml += "<div style=\\"background:" + bgColor + ";border:1px solid " + borderColor + ";border-radius:8px;padding:12px;\\">";';
+          html += '          transcriptHtml += "<div style=\\"font-size:11px;color:#6b7280;margin-bottom:6px;\\">" + msg.speaker.toUpperCase();';
+          html += '          if (msg.timestamp) transcriptHtml += " • " + new Date(msg.timestamp).toLocaleTimeString();';
+          html += '          transcriptHtml += "</div>";';
+          html += '          transcriptHtml += "<div>" + (msg.content || "") + "</div>";';
+          html += '          transcriptHtml += "</div>";';
+          html += '        });';
+          html += '        transcriptHtml += "</div>";';
+          html += '      } else {';
+          html += '        transcriptHtml += "<div class=\\"error\\">No transcript available for this session.</div>";';
+          html += '      }';
+          html += '      document.body.innerHTML = transcriptHtml;';
+          html += '    })';
+          html += '    .catch(error => {';
+          html += '      document.body.innerHTML = "<h1>Error</h1><div class=\\"error\\">Failed to load transcript: " + error.message + "</div>";';
+          html += '    });';
+          html += '}';
+          html += '</script>';
+
+          popup.document.body.innerHTML = html;
+        })
+        .catch(error => {
+          popup.document.body.innerHTML = '<h1>Session History: ' + phone + '</h1><div class="error">Error loading session history: ' + error.message + '</div>';
+        });
     }
      
       // Update call durations every second
@@ -754,13 +829,13 @@ async def bulk_cleanup_handler(request):
                 session_list = []
                 for session in sessions:
                     session_dict = {
-                        'session_id': str(session[0]),   # <- changed
+                        'session_id': str(session[0]),
                         'caller_phone': session[1],
                         'created_at': str(session[2]),
                         'session_number': session[3]
                     }
                     session_list.append(session_dict)
-                
+
                 return web.json_response({
                     'phone': normalized_phone,
                     'sessions': session_list,
@@ -768,6 +843,49 @@ async def bulk_cleanup_handler(request):
                 })
             else:
                 return web.Response(text="Phone parameter required for list_sessions", status=400)
+
+        elif action == 'get_session_transcript':
+            session_id = params.get('session_id', '')
+            if not session_id:
+                return web.Response(text="session_id parameter required", status=400)
+
+            try:
+                # Query database for session transcript
+                async with db.pool.acquire() as conn:
+                    session = await conn.fetchrow('''
+                        SELECT
+                            session_id,
+                            caller_phone,
+                            start_time,
+                            end_time,
+                            duration_seconds,
+                            full_transcript,
+                            session_number
+                        FROM sessions
+                        WHERE session_id = $1
+                    ''', session_id)
+
+                    if not session:
+                        return web.Response(text="Session not found", status=404)
+
+                    # Parse transcript
+                    transcript = session['full_transcript']
+                    if isinstance(transcript, str):
+                        import json
+                        transcript = json.loads(transcript)
+
+                    return web.json_response({
+                        'session_id': str(session['session_id']),
+                        'caller_phone': session['caller_phone'],
+                        'start_time': str(session['start_time']),
+                        'end_time': str(session['end_time']) if session['end_time'] else None,
+                        'duration_seconds': session['duration_seconds'],
+                        'session_number': session['session_number'],
+                        'transcript': transcript or []
+                    })
+            except Exception as e:
+                print(f"Error fetching session transcript: {e}")
+                return web.Response(text=f"Error: {str(e)}", status=500)
         
         elif action == 'delete_old_sessions':
             deleted_count = await db.delete_old_sessions(days_old)
