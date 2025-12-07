@@ -74,15 +74,16 @@ async def voice_webhook_handler(request):
         # Store caller info for WebSocket to retrieve
         active_sessions[call_sid] = {
             'caller_phone': caller_phone,
-            'timestamp': time.time()
+            'timestamp': time.time(),
+            'status': 'connecting'
         }
-        
-        # Notify dashboard of incoming call
+
+        # Notify dashboard of incoming call - send immediately so dashboard shows call
         await broadcast_to_dashboards({
             'type': 'call_started',
             'call_sid': call_sid,
             'caller_phone': caller_phone,
-               'timestamp': time.time()
+            'timestamp': time.time()
         })
         
         # Build WebSocket URL (same format as working direct TwiML)
@@ -474,21 +475,29 @@ Examples:
     }
     
     function handleWebSocketMessage(data) {
+      console.log('📨 Dashboard received:', data.type, data);
       switch (data.type) {
         case 'call_started':
+          console.log('👤 Adding active client:', data.caller_phone, data.call_sid);
           addActiveClient(data);
           break;
         case 'call_ended':
+          console.log('🛑 Removing active client:', data.call_sid);
           removeActiveClient(data.call_sid);
           break;
         case 'transcript_update':
+          console.log('💬 Transcript update:', data.role, data.content.substring(0, 50));
           updateTranscript(data);
           break;
         case 'inactive_clients':
+          console.log('📋 Inactive clients update, count:', data.clients.length);
           loadInactiveClients(data.clients);
           break;
+        case 'active_sessions':
+          console.log('🔴 Active sessions:', data.sessions);
+          break;
         default:
-          console.log('Unknown message type:', data.type);
+          console.log('❓ Unknown message type:', data.type);
       }
     }
     
@@ -539,11 +548,13 @@ Examples:
     }
     
     function addActiveClient(callData) {
+      console.log('➕ addActiveClient called with:', callData);
       const activeClients = document.getElementById('activeClients');
       callStartTime[callData.call_sid] = Date.now();
       // Check if client already exists to prevent duplicates
       const existingClient = document.querySelector(`[data-call-sid="${callData.call_sid}"]`);
       if (existingClient) {
+        console.log('⚠️ Client already exists, skipping duplicate');
         return; // Don't add duplicates
       }
       const clientElement = document.createElement('div');
@@ -558,14 +569,18 @@ Examples:
           <span>Active now</span><span class="duration">Duration: 0m 0s</span>
         </div>
       `;
-      
+
       clientElement.addEventListener('click', () => selectSession(callData.call_sid, callData.caller_phone));
       activeClients.appendChild(clientElement);
-      
+      console.log('✅ Active client added to DOM');
+
       updateActiveCount();
-      
+
       // Auto-select the first active call
-      if (document.querySelectorAll('#activeClients .client').length === 1) {
+      const activeCount = document.querySelectorAll('#activeClients .client').length;
+      console.log('📊 Active clients count:', activeCount);
+      if (activeCount === 1) {
+        console.log('🎯 Auto-selecting first active call');
         selectSession(callData.call_sid, callData.caller_phone);
       }
     }
@@ -585,29 +600,38 @@ Examples:
     }
     
     function selectSession(callSid, callerPhone) {
+      console.log('🎯 Selecting session:', callSid, 'for', callerPhone);
       selectedSession = callSid;
       document.querySelectorAll('.client').forEach(c => c.classList.remove('selected'));
-      document.querySelector(`[data-call-sid="${callSid}"]`).classList.add('selected');
-      
+      const clientEl = document.querySelector(`[data-call-sid="${callSid}"]`);
+      if (clientEl) {
+        clientEl.classList.add('selected');
+      }
+
       document.getElementById('liveName').textContent = callerPhone;
       document.getElementById('liveId').textContent = callSid;
-      
+
       document.getElementById('transcript').innerHTML = `
         <div class="msg" style="text-align:center;color:#6b7280;padding:20px;">
           Live transcript will appear here once conversation starts...
         </div>
       `;
+      console.log('✅ Session selected. selectedSession =', selectedSession);
     }
     
     function updateTranscript(data) {
-      if (selectedSession !== data.call_sid) return;
-      
+      console.log('📝 updateTranscript called. selectedSession:', selectedSession, 'data.call_sid:', data.call_sid);
+      if (selectedSession !== data.call_sid) {
+        console.log('⏭️ Skipping transcript update - session mismatch');
+        return;
+      }
+
       const transcript = document.getElementById('transcript');
-      
+
       if (transcript.children.length === 1 && transcript.children[0].style.textAlign === 'center') {
         transcript.innerHTML = '';
       }
-      
+
       const msgElement = document.createElement('div');
       msgElement.className = `msg ${data.role}`;
       const time = new Date().toLocaleTimeString();
@@ -615,9 +639,10 @@ Examples:
         <div class="time">${time} • ${data.role.toUpperCase()}</div>
         ${data.content}
       `;
-      
+
       transcript.appendChild(msgElement);
       transcript.scrollTop = transcript.scrollHeight;
+      console.log('✅ Transcript updated with', data.role, 'message');
     }
     
     function sendGuidance() {
@@ -861,15 +886,15 @@ async def websocket_handler(request):
                                     # Derive phone / display name
                                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
                                      
-                                    # Build a simple inactive client summary
+                                    # Build a simple inactive client summary with last 6 chars of call_sid as ID
                                     inactive_clients.append({
-                                        'id': call_sid,
+                                        'id': call_sid[-8:],  # Use last 8 chars for readability
                                         'name': phone,
-                                        'flag': 'Stable',
+                                        'flag': 'Casual',
                                         'calls': 1,
                                         'avg': int(duration_sec // 60) if duration_sec else 0,
                                         'last': 'Just now',
-                                        'progress': 0,
+                                        'progress': 50,
                                         'health': 'Stable',
                                     })
                                      
@@ -1092,13 +1117,13 @@ Remember: Only refer to what this caller actually said in previous conversations
                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
 
                     inactive_clients.append({
-                        'id': call_sid,
+                        'id': call_sid[-8:],  # Use last 8 chars for readability
                         'name': phone,
-                        'flag': 'Stable',
+                        'flag': 'Casual',
                         'calls': 1,
                         'avg': int(duration_sec // 60) if duration_sec else 0,
                         'last': 'Just now',
-                        'progress': 0,
+                        'progress': 50,
                         'health': 'Stable',
                     })
 
