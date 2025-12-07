@@ -201,21 +201,24 @@ IMPORTANT: Only reference what the user actually said above. Do NOT make up deta
 
 async def dashboard_websocket_handler(request):
     """Handle dashboard WebSocket connections for real-time monitoring"""
+    print(f"🔍 Dashboard WebSocket handler called from {request.remote}")
     ws = web.WebSocketResponse()
     await ws.prepare(request)
-    
+
     dashboard_connections.add(ws)
     print(f"🖥️ Dashboard connected. Total dashboards: {len(dashboard_connections)}")
-    
+
     try:
         # Send current active sessions to new dashboard
+        print(f"📤 Sending active sessions: {list(active_sessions.keys())}")
         if active_sessions:
             await ws.send_str(json.dumps({
                 'type': 'active_sessions',
                 'sessions': list(active_sessions.keys())
             }))
-        
+
         # Send current inactive clients on connection
+        print(f"📤 Sending inactive clients: {len(inactive_clients)} clients")
         await ws.send_str(json.dumps({
             'type': 'inactive_clients',
             'clients': inactive_clients
@@ -246,15 +249,20 @@ async def dashboard_websocket_handler(request):
                     print(f"Invalid JSON from dashboard: {msg.data}")
                     
             elif msg.type == WSMsgType.ERROR:
-                print(f"Dashboard WebSocket error: {ws.exception()}")
+                print(f"❌ Dashboard WebSocket error: {ws.exception()}")
                 break
-                
+            elif msg.type == WSMsgType.CLOSE:
+                print(f"🔌 Dashboard WebSocket closed by client")
+                break
+
     except Exception as e:
-        print(f"Dashboard WebSocket error: {e}")
+        print(f"❌ Dashboard WebSocket exception: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         dashboard_connections.discard(ws)
         print(f"🖥️ Dashboard disconnected. Remaining: {len(dashboard_connections)}")
-    
+
     return ws
 
 async def dashboard_handler(request):
