@@ -694,7 +694,7 @@ Examples:
       popup.document.write('.session-id{font-weight:600;font-size:14px;}.session-date{color:#6b7280;font-size:12px;}.session-meta{color:#6b7280;font-size:13px;}');
       popup.document.write('.error{color:#ef4444;padding:20px;text-align:center;}</style></head><body>');
       popup.document.write('<h1>Session History: ' + phone + '</h1>');
-      popup.document.write('<div class="loading">Loading sessions...</div>');
+      popup.document.write('<div class=\\'loading\\'>Loading sessions...</div>');
       popup.document.write('</body></html>');
 
       // Fetch session data
@@ -707,16 +707,16 @@ Examples:
             html += '<p style="color:#6b7280;margin-bottom:20px;">Total sessions: ' + data.count + '</p>';
             data.sessions.forEach(session => {
               const date = new Date(session.created_at).toLocaleString();
-              html += '<div class="session" onclick="viewSessionTranscript(\'' + session.session_id + '\')">';
-              html += '<div class="session-header">';
-              html += '<span class="session-id">Session #' + session.session_number + '</span>';
-              html += '<span class="session-date">' + date + '</span>';
+              html += '<div class=\\'session\\' onclick=\\'viewSessionTranscript(\\'' + session.session_id + '\\')\\'>';
+              html += '<div class=\\'session-header\\'>';
+              html += '<span class=\\'session-id\\'>Session #' + session.session_number + '</span>';
+              html += '<span class=\\'session-date\\'>' + date + '</span>';
               html += '</div>';
-              html += '<div class="session-meta">Click to view full conversation transcript</div>';
+              html += '<div class=\\'session-meta\\'>Click to view full conversation transcript</div>';
               html += '</div>';
             });
           } else {
-            html += '<div class="error">No session history found for this caller.</div>';
+            html += '<div class=\\'error\\'>No session history found for this caller.</div>';
           }
 
           // Add function to view transcript
@@ -759,7 +759,7 @@ Examples:
           popup.document.body.innerHTML = html;
         })
         .catch(error => {
-          popup.document.body.innerHTML = '<h1>Session History: ' + phone + '</h1><div class="error">Error loading session history: ' + error.message + '</div>';
+          popup.document.body.innerHTML = '<h1>Session History: ' + phone + '</h1><div class=\\'error\\'>Error loading session history: ' + error.message + '</div>';
         });
     }
      
