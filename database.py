@@ -31,8 +31,18 @@ class LogosDatabase:
                 CREATE TABLE IF NOT EXISTS callers (
                     phone_number VARCHAR(20) PRIMARY KEY,
                     display_name VARCHAR(100),
+                    preferred_name VARCHAR(100),
                     master_prompt TEXT DEFAULT '',
                     ongoing_context TEXT DEFAULT '',
+                    age INTEGER,
+                    background_info TEXT DEFAULT '',
+                    primary_concerns TEXT DEFAULT '',
+                    communication_tone VARCHAR(50) DEFAULT 'supportive',
+                    communication_style VARCHAR(50) DEFAULT 'conversational',
+                    safety_flags TEXT DEFAULT '',
+                    risk_level VARCHAR(20) DEFAULT 'low',
+                    treatment_goals TEXT DEFAULT '',
+                    hgo_notes TEXT DEFAULT '',
                     first_call_date TIMESTAMP DEFAULT NOW(),
                     last_call_date TIMESTAMP,
                     total_calls INTEGER DEFAULT 0,
@@ -41,6 +51,21 @@ class LogosDatabase:
                     updated_at TIMESTAMP DEFAULT NOW()
                 )
             ''')
+            
+            # Add new columns if they don't exist (for existing databases)
+            try:
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS preferred_name VARCHAR(100)')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS age INTEGER')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS background_info TEXT DEFAULT \'\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS primary_concerns TEXT DEFAULT \'\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS communication_tone VARCHAR(50) DEFAULT \'supportive\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS communication_style VARCHAR(50) DEFAULT \'conversational\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS safety_flags TEXT DEFAULT \'\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS risk_level VARCHAR(20) DEFAULT \'low\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS treatment_goals TEXT DEFAULT \'\'')
+                await conn.execute('ALTER TABLE callers ADD COLUMN IF NOT EXISTS hgo_notes TEXT DEFAULT \'\'')
+            except Exception as e:
+                print(f"Note: Could not add new columns (may already exist): {e}")
             
             # Sessions table - individual call records
             await conn.execute('''

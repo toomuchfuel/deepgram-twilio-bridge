@@ -400,7 +400,7 @@ async def dashboard_handler(request):
       <span class="agent-name"><strong>Chris Jones — HGI</strong></span>
       <a class="nav-btn">Logout</a>
       <a class="nav-btn">Admin</a>
-      <a class="nav-btn">Client Settings</a>
+      <a class="nav-btn" id="clientSettingsBtn" style="cursor:pointer;">Client Settings</a>
       <a class="nav-btn danger">Urgent Support</a>
       <a class="nav-btn">Assignments</a>
     </div>
@@ -730,7 +730,79 @@ Examples:
       
       document.getElementById('guidanceText').value = '';
     }
-    function openSessionHistory() {
+    function openClientSettings() {
+      const nameEl = document.getElementById('liveName');
+      if (!nameEl) {
+        alert('Please select a client first');
+        return;
+      }
+      const phone = nameEl.textContent.trim();
+      if (!phone || phone === 'Select a client') {
+        alert('Please select a client first');
+        return;
+      }
+
+      const popup = window.open('', 'ClientSettings', 'width=900,height=700,scrollbars=yes');
+      popup.document.write('<html><head><title>Client Settings - ' + phone + '</title><style>');
+      popup.document.write('body{font-family:system-ui;padding:30px;background:#f9fafb;}h1{margin:0 0 10px;}');
+      popup.document.write('.section{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}');
+      popup.document.write('.section-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;}');
+      popup.document.write('.form-group{margin-bottom:16px;}label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;}');
+      popup.document.write('input,textarea,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;}');
+      popup.document.write('textarea{resize:vertical;min-height:80px;}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}');
+      popup.document.write('button{padding:12px 24px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;border:none;margin-right:8px;}');
+      popup.document.write('.btn-primary{background:#2563eb;color:#fff;}.btn-secondary{background:#fff;color:#374151;border:1px solid #d1d5db;}');
+      popup.document.write('</style></head><body><h1>Client Settings</h1><div class="loading">Loading...</div></body></html>');
+
+      fetch('/client-settings?phone=' + encodeURIComponent(phone))
+        .then(r => r.json())
+        .then(d => {
+          let h = '<h1>Client Settings: ' + phone + '</h1><form id="csForm">';
+          h += '<div class="section"><div class="section-title">Basic Info</div><div class="form-row">';
+          h += '<div><label>Full Name</label><input name="display_name" value="' + (d.display_name||'') + '"></div>';
+          h += '<div><label>Preferred Name</label><input name="preferred_name" value="' + (d.preferred_name||'') + '"></div></div>';
+          h += '<div><label>Age</label><input type="number" name="age" value="' + (d.age||'') + '"></div></div>';
+          h += '<div class="section"><div class="section-title">Master Prompt</div>';
+          h += '<div><label>Custom AI Instructions</label><textarea name="master_prompt" rows="6">' + (d.master_prompt||'') + '</textarea></div></div>';
+          h += '<div class="section"><div class="section-title">Background</div>';
+          h += '<div><label>Background Info</label><textarea name="background_info" rows="4">' + (d.background_info||'') + '</textarea></div>';
+          h += '<div><label>Primary Concerns</label><textarea name="primary_concerns" rows="4">' + (d.primary_concerns||'') + '</textarea></div></div>';
+          h += '<div class="section"><div class="section-title">Communication</div><div class="form-row">';
+          h += '<div><label>Tone</label><select name="communication_tone">';
+          ['supportive','direct','gentle','professional','casual'].forEach(t => {
+            h += '<option value="'+t+'"'+(d.communication_tone===t?' selected':'')+'>'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';
+          });
+          h += '</select></div><div><label>Style</label><select name="communication_style">';
+          ['conversational','structured','questioning','reflective'].forEach(s => {
+            h += '<option value="'+s+'"'+(d.communication_style===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';
+          });
+          h += '</select></div></div></div>';
+          h += '<div class="section"><div class="section-title">Safety & Risk</div><div class="form-row">';
+          h += '<div><label>Risk Level</label><select name="risk_level">';
+          ['low','medium','high','crisis'].forEach(r => {
+            h += '<option value="'+r+'"'+(d.risk_level===r?' selected':'')+'>'+r.charAt(0).toUpperCase()+r.slice(1)+'</option>';
+          });
+          h += '</select></div></div>';
+          h += '<div><label>Safety Flags</label><textarea name="safety_flags" rows="3">' + (d.safety_flags||'') + '</textarea></div></div>';
+          h += '<div class="section"><div class="section-title">Treatment Goals</div>';
+          h += '<div><label>Goals & Plan</label><textarea name="treatment_goals" rows="5">' + (d.treatment_goals||'') + '</textarea></div></div>';
+          h += '<div class="section"><div class="section-title">HGO Notes</div>';
+          h += '<div><label>Private Notes</label><textarea name="hgo_notes" rows="5">' + (d.hgo_notes||'') + '</textarea></div></div>';
+          h += '<div style="margin-top:20px;"><button type="submit" class="btn-primary">Save</button>';
+          h += '<button type="button" class="btn-secondary" onclick="window.close()">Cancel</button></div></form>';
+          popup.document.body.innerHTML = h;
+          popup.document.getElementById('csForm').onsubmit = function(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {phone_number: phone};
+            for (let [k,v] of fd.entries()) data[k] = v||'';
+            if (data.age) data.age = parseInt(data.age);
+            fetch('/client-settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+              .then(r=>r.json()).then(()=>{alert('Saved!');window.close();}).catch(e=>alert('Error: '+e.message));
+          };
+        }).catch(e => popup.document.body.innerHTML = '<h1>Error</h1><p>'+e.message+'</p>');
+    }
+        function openSessionHistory() {
       const nameEl = document.getElementById('liveName');
       if (!nameEl) {
         alert('No client selected');
@@ -864,6 +936,7 @@ Examples:
     
     // Event listeners
     document.getElementById('sendGuidanceBtn').addEventListener('click', sendGuidance);
+    document.getElementById('clientSettingsBtn').addEventListener('click', openClientSettings);
     document.getElementById('sessionHistoryBtn').addEventListener('click', openSessionHistory);
     
     // Initialize dashboard
@@ -874,6 +947,98 @@ Examples:
     '''
     
     return web.Response(text=dashboard_html, content_type='text/html')
+
+
+async def client_settings_handler(request):
+    """Handle client settings - get/update client profile"""
+    if not db:
+        return web.Response(text="Database not available", status=500)
+    
+    try:
+        if request.method == 'GET':
+            # Get client profile
+            phone = request.query.get('phone', '')
+            if not phone:
+                return web.Response(text="Phone parameter required", status=400)
+            
+            async with db.pool.acquire() as conn:
+                caller = await conn.fetchrow("""
+                    SELECT * FROM callers WHERE phone_number = $1
+                """, phone)
+                
+                if not caller:
+                    # Return empty profile
+                    return web.json_response({
+                        'phone_number': phone,
+                        'display_name': '',
+                        'preferred_name': '',
+                        'master_prompt': '',
+                        'age': None,
+                        'background_info': '',
+                        'primary_concerns': '',
+                        'communication_tone': 'supportive',
+                        'communication_style': 'conversational',
+                        'safety_flags': '',
+                        'risk_level': 'low',
+                        'treatment_goals': '',
+                        'hgo_notes': ''
+                    })
+                
+                return web.json_response(dict(caller))
+        
+        elif request.method == 'POST':
+            # Update client profile
+            data = await request.json()
+            phone = data.get('phone_number')
+            
+            if not phone:
+                return web.Response(text="Phone number required", status=400)
+            
+            async with db.pool.acquire() as conn:
+                # Upsert client profile
+                await conn.execute("""
+                    INSERT INTO callers (
+                        phone_number, display_name, preferred_name, master_prompt,
+                        age, background_info, primary_concerns,
+                        communication_tone, communication_style,
+                        safety_flags, risk_level, treatment_goals, hgo_notes,
+                        updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
+                    ON CONFLICT (phone_number) DO UPDATE SET
+                        display_name = $2,
+                        preferred_name = $3,
+                        master_prompt = $4,
+                        age = $5,
+                        background_info = $6,
+                        primary_concerns = $7,
+                        communication_tone = $8,
+                        communication_style = $9,
+                        safety_flags = $10,
+                        risk_level = $11,
+                        treatment_goals = $12,
+                        hgo_notes = $13,
+                        updated_at = NOW()
+                """, 
+                    phone,
+                    data.get('display_name', ''),
+                    data.get('preferred_name', ''),
+                    data.get('master_prompt', ''),
+                    data.get('age'),
+                    data.get('background_info', ''),
+                    data.get('primary_concerns', ''),
+                    data.get('communication_tone', 'supportive'),
+                    data.get('communication_style', 'conversational'),
+                    data.get('safety_flags', ''),
+                    data.get('risk_level', 'low'),
+                    data.get('treatment_goals', ''),
+                    data.get('hgo_notes', '')
+                )
+                
+                return web.json_response({'status': 'success', 'message': 'Client settings saved'})
+    
+    except Exception as e:
+        print(f"Error in client_settings_handler: {e}")
+        return web.Response(text=f"Error: {str(e)}", status=500)
 
 async def bulk_cleanup_handler(request):
     """HTTP endpoint for bulk cleanup operations"""
@@ -1440,6 +1605,8 @@ async def create_app():
     app.router.add_post('/webhook/voice', voice_webhook_handler)  # Twilio voice webhook
     app.router.add_get('/twilio', websocket_handler)  # WebSocket endpoint for calls
     app.router.add_get('/cleanup', bulk_cleanup_handler)  # Bulk cleanup operations
+    app.router.add_get('/client-settings', client_settings_handler)  # Get client settings
+    app.router.add_post('/client-settings', client_settings_handler)  # Save client settings
     
     # Dashboard routes
     app.router.add_get('/dashboard', dashboard_handler)  # Dashboard HTML page
