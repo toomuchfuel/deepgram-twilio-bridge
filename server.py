@@ -782,6 +782,32 @@ Examples:
           // Store phone for back button and define function in popup's window
           popup.window.currentPhone = phone;
           
+          // Function to reload session list
+          popup.window.loadSessionList = function() {
+            const phone = popup.window.currentPhone;
+            fetch("/cleanup?action=list_sessions&phone=" + encodeURIComponent(phone))
+              .then(r => r.json())
+              .then(data => {
+                let html = '<h1>Session History: ' + phone + '</h1>';
+                if (data.sessions && data.sessions.length > 0) {
+                  html += '<p style="color:#6b7280;margin-bottom:20px;">Total sessions: ' + data.count + '</p>';
+                  data.sessions.forEach(session => {
+                    const date = new Date(session.created_at).toLocaleString();
+                    html += "<div class='session' onclick='viewSessionTranscript(&#39;" + session.session_id + "&#39;)'>";
+                    html += "<div class='session-header'>";
+                    html += "<span class='session-id'>Session #" + session.session_number + "</span>";
+                    html += "<span class='session-date'>" + date + "</span>";
+                    html += "</div>";
+                    html += "<div class='session-meta'>Click to view full conversation transcript</div>";
+                    html += "</div>";
+                  });
+                } else {
+                  html += '<div class="error">No session history found for this caller.</div>';
+                }
+                popup.document.body.innerHTML = html;
+              });
+          };
+          
           popup.window.viewSessionTranscript = function(sessionId) {
             console.log('Loading transcript for session:', sessionId);
             fetch("/cleanup?action=get_session_transcript&session_id=" + sessionId)
@@ -791,7 +817,7 @@ Examples:
                 let h = '<h1>Session #' + d.session_number + ' Transcript</h1>';
                 h += '<p style="color:#6b7280;margin-bottom:20px;">Date: ' + new Date(d.start_time).toLocaleString();
                 if (d.duration_seconds) h += '<br>Duration: ' + Math.floor(d.duration_seconds/60) + 'm ' + (d.duration_seconds%60) + 's';
-                h += '</p><button onclick="location.reload()" style="margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;">← Back to Sessions</button>';
+                h += '</p><button onclick="loadSessionList()" style="margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;">← Back to Sessions</button>';
                 
                 // Check if transcript exists and has data
                 if (d.transcript && Array.isArray(d.transcript) && d.transcript.length > 0) {

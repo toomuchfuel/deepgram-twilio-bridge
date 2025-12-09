@@ -183,8 +183,8 @@ class LogosDatabase:
                 WHERE session_id = $1
             ''', session_id, duration, json.dumps(full_transcript), summary, key_topics, mood)
             
-            # Archive old transcripts (keep only last 20 full transcripts)
-            await self.archive_old_transcripts(session_id)
+            # Archive disabled - keep ALL transcripts for HGO access
+            # await self.archive_old_transcripts(session_id)
     
     async def archive_old_transcripts(self, current_session_id):
         """Convert old full transcripts to summaries only"""
