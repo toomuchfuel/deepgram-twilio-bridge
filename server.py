@@ -199,6 +199,62 @@ IMPORTANT: Only reference what the user actually said above. Do NOT make up deta
     print(f"🔍 DEBUG: No meaningful context found")
     return ""
 
+
+async def load_inactive_clients_from_db():
+    """Load all callers from database to populate inactive clients list"""
+    if not db:
+        return []
+    
+    try:
+        async with db.pool.acquire() as conn:
+            # Get all unique callers with their most recent session info
+            rows = await conn.fetch("""
+                SELECT 
+                    caller_phone,
+                    COUNT(*) as total_calls,
+                    MAX(start_time) as last_call_time,
+                    AVG(duration_seconds) as avg_duration
+                FROM sessions
+                WHERE caller_phone IS NOT NULL
+                GROUP BY caller_phone
+                ORDER BY MAX(start_time) DESC
+            """)
+            
+            clients = []
+            for row in rows:
+                phone = row['caller_phone']
+                # Skip if currently active
+                is_active = any(sess.get('caller_phone') == phone for sess in active_sessions.values())
+                if not is_active:
+                    last_call = row['last_call_time']
+                    time_diff = time.time() - last_call.timestamp() if last_call else 0
+                    
+                    # Format "last seen"
+                    if time_diff < 60:
+                        last_seen = 'Just now'
+                    elif time_diff < 3600:
+                        last_seen = f'{int(time_diff/60)}m ago'
+                    elif time_diff < 86400:
+                        last_seen = f'{int(time_diff/3600)}h ago'
+                    else:
+                        last_seen = f'{int(time_diff/86400)}d ago'
+                    
+                    clients.append({
+                        'id': phone[-8:] if len(phone) > 8 else phone,
+                        'name': phone,
+                        'flag': 'Casual',
+                        'calls': row['total_calls'],
+                        'avg': int(row['avg_duration'] // 60) if row['avg_duration'] else 0,
+                        'last': last_seen,
+                        'progress': min(row['total_calls'] * 10, 100),
+                        'health': 'Stable',
+                    })
+            
+            return clients
+    except Exception as e:
+        print(f"Error loading inactive clients from database: {e}")
+        return []
+
 async def dashboard_websocket_handler(request):
     """Handle dashboard WebSocket connections for real-time monitoring"""
     print(f"🔍 Dashboard WebSocket handler called from {request.remote}")
@@ -217,11 +273,12 @@ async def dashboard_websocket_handler(request):
                 'sessions': list(active_sessions.keys())
             }))
 
-        # Send current inactive clients on connection
-        print(f"📤 Sending inactive clients: {len(inactive_clients)} clients")
+        # Load inactive clients from database (always fresh data)
+        db_inactive_clients = await load_inactive_clients_from_db()
+        print(f"📤 Sending inactive clients: {len(db_inactive_clients)} clients from database")
         await ws.send_str(json.dumps({
             'type': 'inactive_clients',
-            'clients': inactive_clients
+            'clients': db_inactive_clients
         }))
         
                
