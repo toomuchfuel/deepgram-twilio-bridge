@@ -719,44 +719,32 @@ Examples:
             html += '<div class="error">No session history found for this caller.</div>';
           }
 
-          // Add function to view transcript
-          html += '<scr' + 'ipt>';
-          html += 'function viewSessionTranscript(sessionId) {';
-          html += '  const transcriptUrl = "/cleanup?action=get_session_transcript&session_id=" + sessionId;';
-          html += '  fetch(transcriptUrl)';
-          html += '    .then(response => response.json())';
-          html += '    .then(data => {';
-          html += '      let transcriptHtml = "<h1>Session #" + data.session_number + " Transcript</h1>";';
-          html += '      transcriptHtml += "<p style=\\"color:#6b7280;margin-bottom:20px;\\">";';
-          html += '      transcriptHtml += "Date: " + new Date(data.start_time).toLocaleString() + "<br>";';
-          html += '      if (data.duration_seconds) transcriptHtml += "Duration: " + Math.floor(data.duration_seconds / 60) + "m " + (data.duration_seconds % 60) + "s<br>";';
-          html += '      transcriptHtml += "</p>";';
-          html += '      transcriptHtml += "<button onclick=\\"history.back()\\" style=\\"margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;\\">← Back to Sessions</button>";';
-          html += '      if (data.transcript && data.transcript.length > 0) {';
-          html += '        transcriptHtml += "<div style=\\"display:flex;flex-direction:column;gap:12px;\\">";';
-          html += '        data.transcript.forEach(msg => {';
-          html += '          const bgColor = msg.speaker == \\"ai\\" ? \\"#eff6ff\\" : \\"#fafafa\\";';
-          html += '          const borderColor = msg.speaker == \\"ai\\" ? \\"#dbeafe\\" : \\"#e4e4e7\\";';
-          html += '          transcriptHtml += "<div style=\\"background:" + bgColor + ";border:1px solid " + borderColor + ";border-radius:8px;padding:12px;\\">";';
-          html += '          transcriptHtml += "<div style=\\"font-size:11px;color:#6b7280;margin-bottom:6px;\\">" + msg.speaker.toUpperCase();';
-          html += '          if (msg.timestamp) transcriptHtml += " &bull; " + new Date(msg.timestamp).toLocaleTimeString();';
-          html += '          transcriptHtml += "</div>";';
-          html += '          transcriptHtml += "<div>" + (msg.content || \"\") + "</div>";';
-          html += '          transcriptHtml += "</div>";';
-          html += '        });';
-          html += '        transcriptHtml += "</div>";';
-          html += '      } else {';
-          html += '        transcriptHtml += "<div class=\\"error\\">No transcript available for this session.</div>";';
-          html += '      }';
-          html += '      document.body.innerHTML = transcriptHtml;';
-          html += '    })';
-          html += '    .catch(error => {';
-          html += '      document.body.innerHTML = "<h1>Error</h1><div class=\\"error\\">Failed to load transcript: " + error.message + "</div>";';
-          html += '    });';
-          html += '}';
-          html += '</scr' + 'ipt>';
-
+          // Set HTML first (without script - won't execute via innerHTML)
           popup.document.body.innerHTML = html;
+
+          // Define function in popup's window so onclick works
+          popup.window.viewSessionTranscript = function(sessionId) {
+            fetch("/cleanup?action=get_session_transcript&session_id=" + sessionId)
+              .then(r => r.json())
+              .then(d => {
+                let h = '<h1>Session #' + d.session_number + ' Transcript</h1>';
+                h += '<p style="color:#6b7280;margin-bottom:20px;">Date: ' + new Date(d.start_time).toLocaleString();
+                if (d.duration_seconds) h += '<br>Duration: ' + Math.floor(d.duration_seconds/60) + 'm ' + (d.duration_seconds%60) + 's';
+                h += '</p><button onclick="history.back()" style="margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;">← Back</button>';
+                if (d.transcript && d.transcript.length) {
+                  h += '<div style="display:flex;flex-direction:column;gap:12px;">';
+                  d.transcript.forEach(m => {
+                    const bg = m.speaker=='ai' ? '#eff6ff' : '#fafafa';
+                    const br = m.speaker=='ai' ? '#dbeafe' : '#e4e4e7';
+                    h += '<div style="background:'+bg+';border:1px solid '+br+';border-radius:8px;padding:12px;"><div style="font-size:11px;color:#6b7280;margin-bottom:6px;">' + m.speaker.toUpperCase();
+                    if (m.timestamp) h += ' • ' + new Date(m.timestamp).toLocaleTimeString();
+                    h += '</div><div>'+(m.content||'')+'</div></div>';
+                  });
+                  h += '</div>';
+                } else h += '<div style="color:#ef4444;padding:20px;text-align:center;">No transcript</div>';
+                popup.document.body.innerHTML = h;
+              }).catch(e => popup.document.body.innerHTML = '<h1>Error</h1><div style="color:#ef4444;padding:20px;">'+e.message+'</div>');
+          };
         })
         .catch(error => {
           popup.document.body.innerHTML = '<h1>Session History: ' + phone + '</h1><div class="error">Error loading session history: ' + error.message + '</div>';
