@@ -707,7 +707,7 @@ Examples:
             html += '<p style="color:#6b7280;margin-bottom:20px;">Total sessions: ' + data.count + '</p>';
             data.sessions.forEach(session => {
               const date = new Date(session.created_at).toLocaleString();
-              html += "<div class='session' onclick='viewSessionTranscript(&quot;" + session.session_id + "&quot;)'>";
+              html += "<div class='session' onclick='viewSessionTranscript(&#39;" + session.session_id + "&#39;)'>";
               html += "<div class='session-header'>";
               html += "<span class='session-id'>Session #" + session.session_number + "</span>";
               html += "<span class='session-date'>" + date + "</span>";
