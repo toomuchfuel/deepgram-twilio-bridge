@@ -755,8 +755,12 @@ Examples:
       popup.document.write('</style></head><body><h1>Client Settings</h1><div class="loading">Loading...</div></body></html>');
 
       fetch('/client-settings?phone=' + encodeURIComponent(phone))
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
         .then(d => {
+          if (d.error) throw new Error(d.error);
           let h = '<h1>Client Settings: ' + phone + '</h1><form id="csForm">';
           h += '<div class="section"><div class="section-title">Basic Info</div><div class="form-row">';
           h += '<div><label>Full Name</label><input name="display_name" value="' + (d.display_name||'') + '"></div>';
@@ -800,7 +804,10 @@ Examples:
             fetch('/client-settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
               .then(r=>r.json()).then(()=>{alert('Saved!');window.close();}).catch(e=>alert('Error: '+e.message));
           };
-        }).catch(e => popup.document.body.innerHTML = '<h1>Error</h1><p>'+e.message+'</p>');
+        }).catch(e => {
+          console.error('Client settings error:', e);
+          popup.document.body.innerHTML = '<h1>Error Loading Settings</h1><div style="padding:20px;color:#ef4444;"><p>' + e.message + '</p><p style="font-size:12px;color:#6b7280;margin-top:10px;">Check the browser console (F12) and Railway logs for more details.</p></div>';
+        });
     }
         function openSessionHistory() {
       const nameEl = document.getElementById('liveName');
@@ -952,14 +959,14 @@ Examples:
 async def client_settings_handler(request):
     """Handle client settings - get/update client profile"""
     if not db:
-        return web.Response(text="Database not available", status=500)
+        return web.json_response({"error": "Database not available"}, status=500)
     
     try:
         if request.method == 'GET':
             # Get client profile
             phone = request.query.get('phone', '')
             if not phone:
-                return web.Response(text="Phone parameter required", status=400)
+                return web.json_response({"error": "Phone parameter required"}, status=400)
             
             async with db.pool.acquire() as conn:
                 caller = await conn.fetchrow("""
@@ -984,7 +991,17 @@ async def client_settings_handler(request):
                         'hgo_notes': ''
                     })
                 
-                return web.json_response(dict(caller))
+                # Convert row to dict with proper type handling
+                result = {}
+                for key in caller.keys():
+                    val = caller[key]
+                    if val is None:
+                        result[key] = None
+                    elif isinstance(val, (str, int, float, bool)):
+                        result[key] = val
+                    else:
+                        result[key] = str(val)
+                return web.json_response(result)
         
         elif request.method == 'POST':
             # Update client profile
@@ -992,7 +1009,7 @@ async def client_settings_handler(request):
             phone = data.get('phone_number')
             
             if not phone:
-                return web.Response(text="Phone number required", status=400)
+                return web.json_response({"error": "Phone number required"}, status=400)
             
             async with db.pool.acquire() as conn:
                 # Upsert client profile
@@ -1038,12 +1055,14 @@ async def client_settings_handler(request):
     
     except Exception as e:
         print(f"Error in client_settings_handler: {e}")
-        return web.Response(text=f"Error: {str(e)}", status=500)
+        import traceback
+        traceback.print_exc()
+        return web.json_response({"error": str(e)}, status=500)
 
 async def bulk_cleanup_handler(request):
     """HTTP endpoint for bulk cleanup operations"""
     if not db:
-        return web.Response(text="Database not available", status=500)
+        return web.json_response({"error": "Database not available"}, status=500)
     
     def normalize_phone(phone):
         """Normalize phone number format"""
