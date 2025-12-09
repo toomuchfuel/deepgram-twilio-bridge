@@ -720,7 +720,7 @@ Examples:
           }
 
           // Add function to view transcript
-          html += '<script>';
+          html += '<scr' + 'ipt>';
           html += 'function viewSessionTranscript(sessionId) {';
           html += '  const transcriptUrl = "/cleanup?action=get_session_transcript&session_id=" + sessionId;';
           html += '  fetch(transcriptUrl)';
@@ -754,7 +754,7 @@ Examples:
           html += '      document.body.innerHTML = "<h1>Error</h1><div class=\\"error\\">Failed to load transcript: " + error.message + "</div>";';
           html += '    });';
           html += '}';
-          html += '</script>';
+          html += '</scr' + 'ipt>';
 
           popup.document.body.innerHTML = html;
         })
