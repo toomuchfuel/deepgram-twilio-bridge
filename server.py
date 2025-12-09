@@ -779,16 +779,23 @@ Examples:
           // Set HTML first (without script - won't execute via innerHTML)
           popup.document.body.innerHTML = html;
 
-          // Define function in popup's window so onclick works
+          // Store phone for back button and define function in popup's window
+          popup.window.currentPhone = phone;
+          
           popup.window.viewSessionTranscript = function(sessionId) {
+            console.log('Loading transcript for session:', sessionId);
             fetch("/cleanup?action=get_session_transcript&session_id=" + sessionId)
               .then(r => r.json())
               .then(d => {
+                console.log('Transcript data:', d);
                 let h = '<h1>Session #' + d.session_number + ' Transcript</h1>';
                 h += '<p style="color:#6b7280;margin-bottom:20px;">Date: ' + new Date(d.start_time).toLocaleString();
                 if (d.duration_seconds) h += '<br>Duration: ' + Math.floor(d.duration_seconds/60) + 'm ' + (d.duration_seconds%60) + 's';
-                h += '</p><button onclick="history.back()" style="margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;">← Back</button>';
-                if (d.transcript && d.transcript.length) {
+                h += '</p><button onclick="location.reload()" style="margin-bottom:20px;padding:8px 16px;border-radius:6px;border:1px solid #2563eb;background:#fff;color:#2563eb;cursor:pointer;">← Back to Sessions</button>';
+                
+                // Check if transcript exists and has data
+                if (d.transcript && Array.isArray(d.transcript) && d.transcript.length > 0) {
+                  console.log('Found ' + d.transcript.length + ' messages in transcript');
                   h += '<div style="display:flex;flex-direction:column;gap:12px;">';
                   d.transcript.forEach(m => {
                     const bg = m.speaker=='ai' ? '#eff6ff' : '#fafafa';
@@ -798,9 +805,15 @@ Examples:
                     h += '</div><div>'+(m.content||'')+'</div></div>';
                   });
                   h += '</div>';
-                } else h += '<div style="color:#ef4444;padding:20px;text-align:center;">No transcript</div>';
+                } else {
+                  console.log('No transcript found. Data:', d.transcript);
+                  h += '<div style="color:#ef4444;padding:20px;text-align:center;">No transcript available for this session.</div>';
+                }
                 popup.document.body.innerHTML = h;
-              }).catch(e => popup.document.body.innerHTML = '<h1>Error</h1><div style="color:#ef4444;padding:20px;">'+e.message+'</div>');
+              }).catch(e => {
+                console.error('Error loading transcript:', e);
+                popup.document.body.innerHTML = '<h1>Error</h1><div style="color:#ef4444;padding:20px;">'+e.message+'</div>';
+              });
           };
         })
         .catch(error => {
