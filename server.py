@@ -1012,17 +1012,25 @@ async def websocket_handler(request):
                                     # Derive phone / display name
                                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
                                      
-                                    # Build a simple inactive client summary with last 6 chars of call_sid as ID
-                                    inactive_clients.append({
-                                        'id': call_sid[-8:],  # Use last 8 chars for readability
-                                        'name': phone,
-                                        'flag': 'Casual',
-                                        'calls': 1,
-                                        'avg': int(duration_sec // 60) if duration_sec else 0,
-                                        'last': 'Just now',
-                                        'progress': 50,
-                                        'health': 'Stable',
-                                    })
+                                    # Build a simple inactive client summary - check if phone already exists
+                                    existing_client = next((c for c in inactive_clients if c['name'] == phone), None)
+                                    if existing_client:
+                                        # Update existing client
+                                        existing_client['calls'] += 1
+                                        existing_client['last'] = 'Just now'
+                                        existing_client['avg'] = int(duration_sec // 60) if duration_sec else 0
+                                    else:
+                                        # Add new client
+                                        inactive_clients.append({
+                                            'id': call_sid[-8:],  # Use last 8 chars for readability
+                                            'name': phone,
+                                            'flag': 'Casual',
+                                            'calls': 1,
+                                            'avg': int(duration_sec // 60) if duration_sec else 0,
+                                            'last': 'Just now',
+                                            'progress': 50,
+                                            'health': 'Stable',
+                                        })
                                      
                                     # Remove from active sessions if present
                                     if call_sid in active_sessions:
@@ -1242,16 +1250,25 @@ Remember: Only refer to what this caller actually said in previous conversations
 
                     phone = caller_phone or session_info.get('caller_phone') or "Unknown"
 
-                    inactive_clients.append({
-                        'id': call_sid[-8:],  # Use last 8 chars for readability
-                        'name': phone,
-                        'flag': 'Casual',
-                        'calls': 1,
-                        'avg': int(duration_sec // 60) if duration_sec else 0,
-                        'last': 'Just now',
-                        'progress': 50,
-                        'health': 'Stable',
-                    })
+                    # Check if phone already exists in inactive clients
+                    existing_client = next((c for c in inactive_clients if c['name'] == phone), None)
+                    if existing_client:
+                        # Update existing client
+                        existing_client['calls'] += 1
+                        existing_client['last'] = 'Just now'
+                        existing_client['avg'] = int(duration_sec // 60) if duration_sec else 0
+                    else:
+                        # Add new client
+                        inactive_clients.append({
+                            'id': call_sid[-8:],  # Use last 8 chars for readability
+                            'name': phone,
+                            'flag': 'Casual',
+                            'calls': 1,
+                            'avg': int(duration_sec // 60) if duration_sec else 0,
+                            'last': 'Just now',
+                            'progress': 50,
+                            'health': 'Stable',
+                        })
 
                     if call_sid in active_sessions:
                         del active_sessions[call_sid]
